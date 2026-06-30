@@ -9,6 +9,8 @@ using DrugCompare.Features.PolishRegistry;
 using DrugCompare.Infrastructure.SQLite;
 using DrugCompare.ViewModels;
 using DrugCompare.ViewModels.Interaction;
+using DrugCompare.Application.Repositories.Contracts.KnowledgeBase;
+using DrugCompare.Infrastructure.SQLite.KnowledgeBase;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -63,6 +65,9 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IPolishDrugRegistryRepository, SqlitePolishDrugRegistryRepository>();
         services.AddSingleton<IIcdCodeRepository, SqliteIcdCodeRepository>();
         services.AddSingleton<IAuditLogRepository, SqliteAuditLogRepository>();
+        services.AddSingleton<IChplDocumentRepository, SqliteChplDocumentRepository>();
+        services.AddSingleton<IChplSectionRepository, SqliteChplSectionRepository>();
+        services.AddSingleton<IKnowledgeChunkRepository, SqliteKnowledgeChunkRepository>();
         services.AddSingleton<IDatabaseStatusRepository, SqliteDatabaseStatusRepository>();
         services.AddSingleton<IDataManagementRepository, DisabledDataManagementRepository>();
     }
