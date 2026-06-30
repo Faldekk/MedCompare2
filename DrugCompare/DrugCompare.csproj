@@ -9,10 +9,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="data2\**" />
-	  <EmbeddedResource Remove="data2\**" />
-	  <None Remove="data2\**" />
-	  <Page Remove="data2\**" />
+		<Compile Remove="data2\**" />
+		<EmbeddedResource Remove="data2\**" />
+		<None Remove="data2\**" />
+		<Page Remove="data2\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -22,7 +22,6 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
-		<PackageReference Include="Npgsql" Version="10.0.3" />
 		<PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
 	</ItemGroup>
 
@@ -33,7 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="data\" />
+		<Folder Include="data\" />
 	</ItemGroup>
 
 </Project>
