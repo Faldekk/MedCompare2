@@ -12,6 +12,8 @@ using DrugCompare.ViewModels.Interaction;
 using DrugCompare.Application.Repositories.Contracts.KnowledgeBase;
 using DrugCompare.Infrastructure.SQLite.KnowledgeBase;
 using Microsoft.Extensions.Configuration;
+using DrugCompare.Application.Services.Contracts.KnowledgeBase;
+using DrugCompare.Application.Services.Implementations.KnowledgeBase;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DrugCompare;
@@ -65,6 +67,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IPolishDrugRegistryRepository, SqlitePolishDrugRegistryRepository>();
         services.AddSingleton<IIcdCodeRepository, SqliteIcdCodeRepository>();
         services.AddSingleton<IAuditLogRepository, SqliteAuditLogRepository>();
+        services.AddSingleton<IKnowledgeBaseIngestionService, KnowledgeBaseIngestionService>();
         services.AddSingleton<IChplDocumentRepository, SqliteChplDocumentRepository>();
         services.AddSingleton<IChplSectionRepository, SqliteChplSectionRepository>();
         services.AddSingleton<IKnowledgeChunkRepository, SqliteKnowledgeChunkRepository>();
@@ -97,6 +100,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IPolishDrugRegistryService, PolishDrugRegistryService>();
         services.AddSingleton<IIcdCodeService, IcdCodeService>();
         services.AddSingleton<IAuditLogService, AuditLogService>();
+        services.AddSingleton<IKnowledgeBaseIngestionService, KnowledgeBaseIngestionService>();
 
         services.AddSingleton<IDatabaseStatusService, DatabaseStatusService>();
         services.AddSingleton<IDataManagementService, DisabledDataManagementService>();
