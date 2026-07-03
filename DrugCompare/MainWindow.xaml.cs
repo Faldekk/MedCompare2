@@ -1,115 +1,54 @@
-using DrugCompare.ViewModels;
 using System.Windows;
+using DrugCompare.ViewModels;
 
 namespace DrugCompare;
 
 public partial class MainWindow : Window
 {
+    private bool _isNavigationCollapsed;
+
     public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
+
         DataContext = viewModel;
+        MainTabs.SelectedIndex = 0;
     }
-    private void SelectModule_Click(object sender, RoutedEventArgs e)
+
+    private void Navigate_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not System.Windows.Controls.Button button)
+        if (sender is not FrameworkElement element)
         {
             return;
         }
 
-        if (button.Tag is null)
+        if (element.Tag is null)
         {
             return;
         }
 
-        if (int.TryParse(button.Tag.ToString(), out var selectedIndex))
+        if (!int.TryParse(element.Tag.ToString(), out var tabIndex))
         {
-            ModuleNavigation.SelectedIndex = selectedIndex;
+            return;
         }
-    }
-    private void SidebarToggle_Checked(object sender, RoutedEventArgs e)
-    {
-        SidebarColumn.Width = new GridLength(260);
+
+        MainTabs.SelectedIndex = tabIndex;
     }
 
-    private void SidebarToggle_Unchecked(object sender, RoutedEventArgs e)
+    private void ToggleNavigation_Click(object sender, RoutedEventArgs e)
     {
-        SidebarColumn.Width = new GridLength(56);
-    }
+        _isNavigationCollapsed = !_isNavigationCollapsed;
 
-    
+        NavigationColumn.Width = _isNavigationCollapsed
+            ? new GridLength(64)
+            : new GridLength(270);
 
-    private void OpenHistory_Click(object sender, RoutedEventArgs e)
-    {
-        var window = new Views.HistoryView
-        {
-            DataContext = DataContext
-        };
+        ExpandedNavigation.Visibility = _isNavigationCollapsed
+            ? Visibility.Collapsed
+            : Visibility.Visible;
 
-        ShowSimpleWindow("History", window);
-    }
-
-    private void OpenDatabaseStatus_Click(object sender, RoutedEventArgs e)
-    {
-        var window = new Views.DatabaseStatusView
-        {
-            DataContext = DataContext
-        };
-
-        ShowSimpleWindow("Database Status", window);
-    }
-
-    private void OpenDataManagement_Click(object sender, RoutedEventArgs e)
-    {
-        var window = new Views.DataManagementView
-        {
-            DataContext = DataContext
-        };
-
-        ShowSimpleWindow("Data Management", window);
-    }
-
-    private void OpenAuditLog_Click(object sender, RoutedEventArgs e)
-    {
-        var window = new Views.AuditLogView
-        {
-            DataContext = DataContext
-        };
-
-        ShowSimpleWindow("Audit Log", window);
-    }
-
-    private void OpenSettings_Click(object sender, RoutedEventArgs e)
-    {
-        var window = new Views.SettingsView
-        {
-            DataContext = DataContext
-        };
-
-        ShowSimpleWindow("Settings", window);
-    }
-
-    private void OpenAbout_Click(object sender, RoutedEventArgs e)
-    {
-        MessageBox.Show(
-            "MedCompare\n\nLocal medical reference and interaction-checking prototype.\n\nThis application does not replace physician or pharmacist judgment.",
-            "About MedCompare",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
-    }
-
-    private void ShowSimpleWindow(string title, object content)
-    {
-        var window = new Window
-        {
-            Title = title,
-            Content = content,
-            Owner = this,
-            Width = 900,
-            Height = 650,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-
-        window.ShowDialog();
+        CollapsedNavigation.Visibility = _isNavigationCollapsed
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 }

@@ -11,10 +11,13 @@ using DrugCompare.ViewModels;
 using DrugCompare.ViewModels.Interaction;
 using DrugCompare.Application.Repositories.Contracts.KnowledgeBase;
 using DrugCompare.Infrastructure.SQLite.KnowledgeBase;
+using DrugCompare.Application.Services.Contracts.Rag;
+using DrugCompare.Infrastructure.SQLite.Rag;
 using Microsoft.Extensions.Configuration;
 using DrugCompare.Application.Services.Contracts.KnowledgeBase;
 using DrugCompare.Application.Services.Implementations.KnowledgeBase;
 using Microsoft.Extensions.DependencyInjection;
+using DrugCompare.Features.EvidenceAssistant;
 
 namespace DrugCompare;
 
@@ -100,9 +103,11 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IPolishDrugRegistryService, PolishDrugRegistryService>();
         services.AddSingleton<IIcdCodeService, IcdCodeService>();
         services.AddSingleton<IAuditLogService, AuditLogService>();
+        services.AddSingleton<IRagRetriever, SqliteFtsRagRetriever>();
         services.AddSingleton<IKnowledgeBaseIngestionService, KnowledgeBaseIngestionService>();
-
+        services.AddSingleton<IKnowledgeBaseStatsService, KnowledgeBaseStatsService>();
         services.AddSingleton<IDatabaseStatusService, DatabaseStatusService>();
+        services.AddSingleton<IKnowledgeBaseSearchService, KnowledgeBaseSearchService>();
         services.AddSingleton<IDataManagementService, DisabledDataManagementService>();
     }
 
@@ -113,6 +118,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IcdLookerViewModel>();
         services.AddSingleton<ChPLNavigatorViewModel>();
         services.AddSingleton<MainViewModel>();
+        services.AddSingleton<EvidenceAssistantViewModel>();
     }
 
     private static void RegisterViews(IServiceCollection services)

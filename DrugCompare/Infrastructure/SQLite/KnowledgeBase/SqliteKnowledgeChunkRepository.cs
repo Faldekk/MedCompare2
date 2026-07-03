@@ -121,7 +121,42 @@ public sealed class SqliteKnowledgeChunkRepository : IKnowledgeChunkRepository
 
         await transaction.CommitAsync(cancellationToken);
     }
+    public async Task<KnowledgeBaseStats> GetStatsAsync(
+       CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+        SELECT
+            (SELECT COUNT(*) FROM chpl_documents) AS chpl_document_count,
+            (SELECT COUNT(*) FROM chpl_sections) AS chpl_section_count,
+            (SELECT COUNT(*) FROM knowledge_chunks) AS knowledge_chunk_count,
+            (SELECT COUNT(*) FROM knowledge_chunks WHERE review_status = 'needs_review') AS needs_review_chunk_count,
+            (SELECT COUNT(*) FROM knowledge_chunks WHERE review_status = 'reviewed') AS reviewed_chunk_count,
+            (SELECT COUNT(*) FROM knowledge_chunks WHERE review_status = 'verified') AS verified_chunk_count;
+        """;
 
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return new KnowledgeBaseStats();
+        }
+
+        return new KnowledgeBaseStats
+        {
+            ChplDocumentCount = Convert.ToInt32(reader["chpl_document_count"]),
+            ChplSectionCount = Convert.ToInt32(reader["chpl_section_count"]),
+            KnowledgeChunkCount = Convert.ToInt32(reader["knowledge_chunk_count"]),
+            NeedsReviewChunkCount = Convert.ToInt32(reader["needs_review_chunk_count"]),
+            ReviewedChunkCount = Convert.ToInt32(reader["reviewed_chunk_count"]),
+            VerifiedChunkCount = Convert.ToInt32(reader["verified_chunk_count"])
+        };
+    }
     public async Task<KnowledgeChunk?> GetByIdAsync(
         long id,
         CancellationToken cancellationToken = default)

@@ -125,6 +125,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
                 SourceFile = Path.GetFileName(filePath),
                 DocumentType = "ChPL",
                 Language = "pl",
+                ProductName = ExtractProductNameFromFileName(filePath),
                 ParsedAt = DateTime.UtcNow,
                 Sections = parsedSections
             };

@@ -1,0 +1,136 @@
+﻿<UserControl x:Class="DrugCompare.Features.EvidenceAssistant.EvidenceAssistantView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="#F5F7FA">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0"
+                    Margin="0,0,0,16">
+            <TextBlock Text="Evidence Assistant"
+                       FontSize="26"
+                       FontWeight="Bold"
+                       Foreground="#102027"/>
+
+            <TextBlock Text="Lokalne wyszukiwanie źródeł. Bez DeepSeek. Bez generowania odpowiedzi klinicznej."
+                       Foreground="#607D8B"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Background="White"
+                BorderBrush="#DDE3EA"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="18"
+                Margin="0,0,0,14">
+
+            <StackPanel>
+                <TextBlock Text="Zapytanie"
+                           FontWeight="SemiBold"
+                           Margin="0,0,0,6"/>
+
+                <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
+                         MinHeight="70"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         Margin="0,0,0,12"/>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="170"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0"
+                                Margin="0,0,12,0">
+                        <TextBlock Text="Produkt / nazwa źródła — opcjonalnie"
+                                   Foreground="#607D8B"/>
+                        <TextBox Text="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Margin="0,0,12,0">
+                        <TextBlock Text="Sekcja — opcjonalnie"
+                                   Foreground="#607D8B"/>
+                        <TextBox Text="{Binding SectionNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <CheckBox Grid.Column="2"
+                              Content="Uwzględnij needs_review"
+                              IsChecked="{Binding IncludeNeedsReview}"
+                              VerticalAlignment="Bottom"
+                              Margin="0,0,0,8"/>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Szukaj źródeł"
+                            Command="{Binding SearchCommand}"
+                            Height="34"
+                            Width="130"
+                            Margin="0,0,8,0"/>
+
+                    <Button Content="Wyczyść"
+                            Command="{Binding ClearCommand}"
+                            Height="34"
+                            Width="90"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2"
+                Background="White"
+                BorderBrush="#DDE3EA"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="12">
+
+            <DataGrid ItemsSource="{Binding Results}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      HeadersVisibility="Column"
+                      CanUserAddRows="False"
+                      >
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding Id}"
+                                        Width="70"/>
+
+                    <DataGridTextColumn Header="Źródło"
+                                        Binding="{Binding SourceTitle}"
+                                        Width="240"/>
+
+                    <DataGridTextColumn Header="Sekcja"
+                                        Binding="{Binding SectionNumber}"
+                                        Width="80"/>
+
+                    <DataGridTextColumn Header="Status"
+                                        Binding="{Binding ReviewStatus}"
+                                        Width="120"/>
+
+                    <DataGridTextColumn Header="Tekst"
+                                        Binding="{Binding ChunkText}"
+                                        Width="*"/>
+                </DataGrid.Columns>
+
+            </DataGrid>
+        </Border>
+
+        <TextBlock Grid.Row="3"
+                   Text="{Binding StatusMessage}"
+                   Foreground="#607D8B"
+                   Margin="0,10,0,0"/>
+    </Grid>
+</UserControl>

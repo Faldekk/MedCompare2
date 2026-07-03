@@ -25,4 +25,7 @@ public interface IKnowledgeChunkRepository
         string sourceType,
         long sourceId,
         CancellationToken cancellationToken = default);
+
+    Task<KnowledgeBaseStats> GetStatsAsync(
+        CancellationToken cancellationToken = default);
 }

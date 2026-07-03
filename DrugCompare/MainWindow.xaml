@@ -1,436 +1,597 @@
 ﻿<Window x:Class="DrugCompare.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:interaction="clr-namespace:DrugCompare.Features.InteractionChecker"
-        xmlns:polishRegistry="clr-namespace:DrugCompare.Features.PolishRegistry"
         xmlns:chplNavigator="clr-namespace:DrugCompare.Features.ChPLNavigator"
+        xmlns:interactionChecker="clr-namespace:DrugCompare.Features.InteractionChecker"
+        xmlns:polishRegistry="clr-namespace:DrugCompare.Features.PolishRegistry"
         xmlns:icdLooker="clr-namespace:DrugCompare.Features.IcdLooker"
+        xmlns:evidenceAssistant="clr-namespace:DrugCompare.Features.EvidenceAssistant"
         Title="ClinicDaddy"
-        Height="850"
+        Height="900"
         Width="1400"
-        MinHeight="760"
-        MinWidth="1180"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F4F7FB"/>
-        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="BorderBrushSoft" Color="#D7DEE8"/>
-        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#111827"/>
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#6B7280"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#2563EB"/>
-        <SolidColorBrush x:Key="SoftAccentBrush" Color="#EEF2FF"/>
 
-        <Style x:Key="NavigationItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Margin" Value="8,4"/>
-            <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Cursor" Value="Hand"/>
-
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#F1F5F9"/>
-                                <Setter Property="BorderBrush" Value="#CBD5E1"/>
-                            </Trigger>
-
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{StaticResource SoftAccentBrush}"/>
-                                <Setter Property="BorderBrush" Value="#C7D2FE"/>
-                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <Style x:Key="CardStyle"
+               TargetType="Border">
+            <Setter Property="Background"
+                    Value="White"/>
+            <Setter Property="BorderBrush"
+                    Value="#DDE3EA"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+            <Setter Property="CornerRadius"
+                    Value="10"/>
+            <Setter Property="Padding"
+                    Value="18"/>
+            <Setter Property="Margin"
+                    Value="0,0,0,14"/>
         </Style>
 
-        <Style x:Key="SidebarButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="Margin" Value="8,4"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#F8FAFC"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
-            <Setter Property="BorderThickness" Value="1"/>
+        <Style x:Key="MutedTextStyle"
+               TargetType="TextBlock">
+            <Setter Property="Foreground"
+                    Value="#607D8B"/>
+            <Setter Property="FontSize"
+                    Value="13"/>
         </Style>
 
-        <Style x:Key="IconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="42"/>
-            <Setter Property="Height" Value="42"/>
-            <Setter Property="Margin" Value="5,4"/>
-            <Setter Property="FontSize" Value="17"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Background" Value="#F8FAFC"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
-            <Setter Property="BorderThickness" Value="1"/>
+        <Style x:Key="NavButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="38"/>
+            <Setter Property="Margin"
+                    Value="0,2,0,2"/>
+            <Setter Property="Padding"
+                    Value="10,0"/>
+            <Setter Property="FontSize"
+                    Value="14"/>
+            <Setter Property="Foreground"
+                    Value="#263238"/>
+            <Setter Property="Background"
+                    Value="Transparent"/>
+            <Setter Property="BorderBrush"
+                    Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Left"/>
+            <Setter Property="VerticalContentAlignment"
+                    Value="Center"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
         </Style>
+
+        <Style x:Key="CollapsedNavButtonStyle"
+               TargetType="Button">
+            <Setter Property="Height"
+                    Value="38"/>
+            <Setter Property="Margin"
+                    Value="0,2,0,2"/>
+            <Setter Property="FontSize"
+                    Value="14"/>
+            <Setter Property="Background"
+                    Value="Transparent"/>
+            <Setter Property="BorderBrush"
+                    Value="Transparent"/>
+            <Setter Property="Cursor"
+                    Value="Hand"/>
+        </Style>
+
     </Window.Resources>
 
-    <Grid Background="{StaticResource PageBackgroundBrush}">
+    <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition x:Name="SidebarColumn" Width="260"/>
+            <ColumnDefinition x:Name="NavigationColumn"
+                              Width="270"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Lewy panel -->
+        <!-- LEFT NAVIGATION -->
         <Border Grid.Column="0"
                 Background="White"
-                BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderBrush="#DDE3EA"
                 BorderThickness="0,0,1,0">
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="56"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Toggle + logo -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="56"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <Button Grid.Row="0"
+                        Content="☰"
+                        Height="42"
+                        Margin="10"
+                        FontSize="18"
+                        Click="ToggleNavigation_Click"/>
 
-                    <ToggleButton x:Name="SidebarToggle"
-                                  Grid.Column="0"
-                                  IsChecked="True"
-                                  Width="40"
-                                  Height="36"
-                                  Margin="8"
-                                  Content="☰"
-                                  FontSize="18"
-                                  FontWeight="Bold"
-                                  Cursor="Hand"
-                                  Checked="SidebarToggle_Checked"
-                                  Unchecked="SidebarToggle_Unchecked"/>
+                <!-- Expanded navigation -->
+                <ScrollViewer x:Name="ExpandedNavigation"
+                              Grid.Row="1"
+                              VerticalScrollBarVisibility="Auto">
 
-                    <StackPanel Grid.Column="1"
-                                VerticalAlignment="Center">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Visible"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsChecked, ElementName=SidebarToggle}" Value="False">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
+                    <StackPanel Margin="18,0,18,0">
 
                         <TextBlock Text="ClinicDaddy"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="#102027"
+                                   Margin="0,0,0,4"/>
 
-                        <TextBlock Text="CDSS prototype"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource AccentBrush}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Opis panelu -->
-                <Border Grid.Row="1"
-                        Padding="14,4,14,8">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=SidebarToggle}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-
-                    <StackPanel>
-                        <TextBlock Text="Wybierz narzędzie"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource PrimaryTextBrush}"/>
-
-                        <TextBlock Text="Moduły aplikacji"
+                        <TextBlock Text="Offline Clinical Decision Support"
                                    FontSize="12"
-                                   Foreground="{StaticResource SecondaryTextBrush}"
-                                   Margin="0,3,0,0"/>
+                                   Foreground="#607D8B"
+                                   Margin="0,0,0,20"/>
+
+                        <Expander Header="Clinical Tools"
+          IsExpanded="True"
+          Margin="0,0,0,8">
+                            <StackPanel Margin="0,8,0,0">
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                Content="🔎  Evidence Assistant"
+                Tag="0"
+                Click="Navigate_Click"/>
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                Content="📄  ChPL Navigator"
+                Tag="1"
+                Click="Navigate_Click"/>
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                Content="⚕  Interaction Checker"
+                Tag="2"
+                Click="Navigate_Click"/>
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                Content="R  Polski Rejestr Leków"
+                Tag="3"
+                Click="Navigate_Click"/>
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                Content="ICD  ICD Looker"
+                Tag="4"
+                Click="Navigate_Click"/>
+
+                            </StackPanel>
+                        </Expander>
+
+                    
+
+                        <Expander Header="Database"
+                                  IsExpanded="True"
+                                  Margin="0,0,0,8">
+                            <StackPanel Margin="0,8,0,0">
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                                        Content="🗄  Data Management"
+                                        Tag="5"
+                                        Click="Navigate_Click"/>
+
+                            </StackPanel>
+                        </Expander>
+
+                        <Expander Header="System"
+                                  IsExpanded="False"
+                                  Margin="0,0,0,8">
+                            <StackPanel Margin="0,8,0,0">
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                                        Content="🧾  Audit Log"
+                                        Tag="6"
+                                        Click="Navigate_Click"/>
+
+                                <Button Style="{StaticResource NavButtonStyle}"
+                                        Content="🕘  History"
+                                        Tag="7"
+                                        Click="Navigate_Click"/>
+
+                            </StackPanel>
+                        </Expander>
+
                     </StackPanel>
-                </Border>
+                </ScrollViewer>
 
-                <!-- Nawigacja pełna -->
-                <ListBox x:Name="ModuleNavigation"
-                         Grid.Row="2"
-                         SelectedIndex="0"
-                         BorderThickness="0"
-                         Background="White"
-                         ItemContainerStyle="{StaticResource NavigationItemStyle}">
-                    <ListBox.Style>
-                        <Style TargetType="ListBox">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=SidebarToggle}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ListBox.Style>
+                <!-- Collapsed navigation -->
+                <StackPanel x:Name="CollapsedNavigation"
+                            Grid.Row="1"
+                            Visibility="Collapsed"
+                            Margin="8,0,8,0">
 
-                    <!-- Index 0 -->
-                    <ListBoxItem>
-                        <StackPanel>
-                            <TextBlock Text="ChPL Navigator"/>
-                            <TextBlock Text="Sekcje ChPL, źródła, szybki podgląd"
-                                       FontSize="11"
-                                       Foreground="{StaticResource SecondaryTextBrush}"
-                                       Margin="0,3,0,0"/>
-                        </StackPanel>
-                    </ListBoxItem>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="🔎"
+        ToolTip="Evidence Assistant"
+        Tag="0"
+        Click="Navigate_Click"/>
 
-                    <!-- Index 1 -->
-                    <ListBoxItem>
-                        <StackPanel>
-                            <TextBlock Text="Sprawdzanie interakcji"/>
-                            <TextBlock Text="Leki, substancje czynne, interakcje"
-                                       FontSize="11"
-                                       Foreground="{StaticResource SecondaryTextBrush}"
-                                       Margin="0,3,0,0"/>
-                        </StackPanel>
-                    </ListBoxItem>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="📄"
+        ToolTip="ChPL Navigator"
+        Tag="1"
+        Click="Navigate_Click"/>
 
-                    <!-- Index 2 -->
-                    <ListBoxItem>
-                        <StackPanel>
-                            <TextBlock Text="Polski Rejestr Leków"/>
-                            <TextBlock Text="RPL, ChPL, ulotki, pozwolenia"
-                                       FontSize="11"
-                                       Foreground="{StaticResource SecondaryTextBrush}"
-                                       Margin="0,3,0,0"/>
-                        </StackPanel>
-                    </ListBoxItem>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="⚕"
+        ToolTip="Interaction Checker"
+        Tag="2"
+        Click="Navigate_Click"/>
 
-                    <!-- Index 3 -->
-                    <ListBoxItem>
-                        <StackPanel>
-                            <TextBlock Text="Wyszukiwarka ICD-11"/>
-                            <TextBlock Text="Kody, działy, opisy ICD"
-                                       FontSize="11"
-                                       Foreground="{StaticResource SecondaryTextBrush}"
-                                       Margin="0,3,0,0"/>
-                        </StackPanel>
-                    </ListBoxItem>
-                </ListBox>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="R"
+        ToolTip="Polski Rejestr Leków"
+        Tag="3"
+        Click="Navigate_Click"/>
 
-                <!-- Nawigacja zwinięta -->
-                <StackPanel Grid.Row="2"
-                            VerticalAlignment="Top"
-                            Margin="0,6,0,0">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=SidebarToggle}" Value="False">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="ICD"
+        ToolTip="ICD Looker"
+        Tag="4"
+        Click="Navigate_Click"/>
 
-                    <Button Content="📄"
-                            ToolTip="ChPL Navigator"
-                            Tag="0"
-                            Click="SelectModule_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="🗄"
+        ToolTip="Data Management"
+        Tag="5"
+        Click="Navigate_Click"/>
 
-                    <Button Content="⚕"
-                            ToolTip="Sprawdzanie interakcji"
-                            Tag="1"
-                            Click="SelectModule_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="🧾"
+        ToolTip="Audit Log"
+        Tag="6"
+        Click="Navigate_Click"/>
 
-                    <Button Content="R"
-                            ToolTip="Polski Rejestr Leków"
-                            Tag="2"
-                            Click="SelectModule_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
+                    <Button Style="{StaticResource CollapsedNavButtonStyle}"
+        Content="🕘"
+        ToolTip="History"
+        Tag="7"
+        Click="Navigate_Click"/>
 
-                    <Button Content="ICD"
-                            ToolTip="Wyszukiwarka ICD-11"
-                            Tag="3"
-                            Click="SelectModule_Click"
-                            FontSize="12"
-                            Style="{StaticResource IconButtonStyle}"/>
                 </StackPanel>
 
-                <!-- Narzędzia dolne -->
-                <StackPanel Grid.Row="3"
-                            Margin="0,0,0,10">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=SidebarToggle}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
+                <TextBlock Grid.Row="2"
+                           Text="Brak danych nie oznacza bezpieczeństwa klinicznego."
+                           TextWrapping="Wrap"
+                           FontSize="11"
+                           Foreground="#78909C"
+                           Margin="18,14,18,18"/>
 
-                    <Separator Margin="12,6"/>
-
-                    <Button Content="Historia"
-                            Click="OpenHistory_Click"
-                            Style="{StaticResource SidebarButtonStyle}"/>
-
-                    <Button Content="Status bazy danych"
-                            Click="OpenDatabaseStatus_Click"
-                            Style="{StaticResource SidebarButtonStyle}"/>
-
-                    <Button Content="Zarządzanie danymi"
-                            Click="OpenDataManagement_Click"
-                            Style="{StaticResource SidebarButtonStyle}"/>
-
-                    <Button Content="Dziennik audytu"
-                            Click="OpenAuditLog_Click"
-                            Style="{StaticResource SidebarButtonStyle}"/>
-
-                    <Button Content="Ustawienia"
-                            Click="OpenSettings_Click"
-                            Style="{StaticResource SidebarButtonStyle}"/>
-
-                    <Button Content="O aplikacji"
-                            Click="OpenAbout_Click"
-                            Style="{StaticResource SidebarButtonStyle}"/>
-                </StackPanel>
-
-                <!-- Narzędzia zwinięte -->
-                <StackPanel Grid.Row="3"
-                            Margin="0,0,0,10">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=SidebarToggle}" Value="False">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <Button Content="H"
-                            ToolTip="Historia"
-                            Click="OpenHistory_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
-
-                    <Button Content="DB"
-                            ToolTip="Status bazy danych"
-                            Click="OpenDatabaseStatus_Click"
-                            FontSize="12"
-                            Style="{StaticResource IconButtonStyle}"/>
-
-                    <Button Content="DM"
-                            ToolTip="Zarządzanie danymi"
-                            Click="OpenDataManagement_Click"
-                            FontSize="12"
-                            Style="{StaticResource IconButtonStyle}"/>
-
-                    <Button Content="A"
-                            ToolTip="Dziennik audytu"
-                            Click="OpenAuditLog_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
-
-                    <Button Content="S"
-                            ToolTip="Ustawienia"
-                            Click="OpenSettings_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
-
-                    <Button Content="?"
-                            ToolTip="O aplikacji"
-                            Click="OpenAbout_Click"
-                            Style="{StaticResource IconButtonStyle}"/>
-                </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Główna zawartość -->
-        <Grid Grid.Column="1"
-              Background="{StaticResource PageBackgroundBrush}">
+        <!-- MAIN CONTENT -->
+        <TabControl x:Name="MainTabs"
+                    Grid.Column="1"
+                    Margin="22"
+                    BorderThickness="0"
+                    Background="Transparent">
 
-            <!-- Index 0: ChPL Navigator -->
-            <chplNavigator:ChPLNavigatorView DataContext="{Binding ChPLNavigator}">
-                <chplNavigator:ChPLNavigatorView.Style>
-                    <Style TargetType="chplNavigator:ChPLNavigatorView">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=ModuleNavigation}" Value="0">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </chplNavigator:ChPLNavigatorView.Style>
-            </chplNavigator:ChPLNavigatorView>
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem">
+                    <Setter Property="Visibility"
+                            Value="Collapsed"/>
+                </Style>
+            </TabControl.ItemContainerStyle>
+            
+            <!-- 0 Evidence Assistant -->
+            <TabItem>
+                <evidenceAssistant:EvidenceAssistantView DataContext="{Binding EvidenceAssistant}"/>
+            </TabItem>
+            <!-- 1 ChPL Navigator -->
+            <TabItem>
+                <chplNavigator:ChPLNavigatorView DataContext="{Binding ChPLNavigator}"/>
+            </TabItem>
 
-            <!-- Index 1: Interaction Checker -->
-            <interaction:InteractionCheckerView DataContext="{Binding InteractionChecker}">
-                <interaction:InteractionCheckerView.Style>
-                    <Style TargetType="interaction:InteractionCheckerView">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=ModuleNavigation}" Value="1">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </interaction:InteractionCheckerView.Style>
-            </interaction:InteractionCheckerView>
+            <!-- 2 Interaction Checker -->
+            <TabItem>
+                <interactionChecker:InteractionCheckerView DataContext="{Binding InteractionChecker}"/>
+            </TabItem>
 
-            <!-- Index 2: Polish Registry -->
-            <polishRegistry:PolishRegistryView DataContext="{Binding PolishDrugRegistry}">
-                <polishRegistry:PolishRegistryView.Style>
-                    <Style TargetType="polishRegistry:PolishRegistryView">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=ModuleNavigation}" Value="2">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </polishRegistry:PolishRegistryView.Style>
-            </polishRegistry:PolishRegistryView>
+            <!-- 3 Polish Registry -->
+            <TabItem>
+                <polishRegistry:PolishRegistryView DataContext="{Binding PolishRegistry}"/>
+            </TabItem>
 
-            <!-- Index 3: ICD Looker -->
-            <icdLooker:IcdLookerView DataContext="{Binding IcdLooker}">
-                <icdLooker:IcdLookerView.Style>
-                    <Style TargetType="icdLooker:IcdLookerView">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=ModuleNavigation}" Value="3">
-                                <Setter Property="Visibility" Value="Visible"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </icdLooker:IcdLookerView.Style>
-            </icdLooker:IcdLookerView>
+            <!-- 4 ICD Looker -->
+            <TabItem>
+                <icdLooker:IcdLookerView DataContext="{Binding IcdLooker}"/>
+            </TabItem>
 
-        </Grid>
+            <!-- 5 Data Management -->
+            <TabItem>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Knowledge Base Search"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,12"/>
+
+                                <DockPanel Margin="0,0,0,12">
+                                    <Button Content="Szukaj"
+                    Command="{Binding SearchKnowledgeBaseCommand}"
+                    Height="34"
+                    Width="90"
+                    DockPanel.Dock="Right"
+                    Margin="8,0,0,0"/>
+
+                                    <TextBox Text="{Binding KnowledgeSearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                     Height="34"
+                     VerticalContentAlignment="Center"/>
+                                </DockPanel>
+
+                                <TextBlock Text="{Binding KnowledgeSearchStatus}"
+                   Foreground="#607D8B"
+                   Margin="0,0,0,12"/>
+
+                                <DataGrid ItemsSource="{Binding KnowledgeSearchResults}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  HeadersVisibility="Column"
+                  CanUserAddRows="False"
+                  MaxHeight="360">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Source"
+                                    Binding="{Binding SourceTitle}"
+                                    Width="220"/>
+
+                                        <DataGridTextColumn Header="Section"
+                                    Binding="{Binding SectionNumber}"
+                                    Width="80"/>
+
+                                        <DataGridTextColumn Header="Status"
+                                    Binding="{Binding ReviewStatus}"
+                                    Width="120"/>
+
+                                        <DataGridTextColumn Header="Text"
+                                    Binding="{Binding ChunkText}"
+                                    Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="Data Management"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="#102027"
+                                   Margin="0,0,0,18"/>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Database Status"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,12"/>
+
+                                <UniformGrid Columns="3">
+
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Drugs"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding DrugCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Active substances"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding ActiveSubstanceCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                    <StackPanel>
+                                        <TextBlock Text="Interactions"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding InteractionCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                </UniformGrid>
+
+                                <Button Content="Odśwież status bazy"
+                                        Command="{Binding LoadDatabaseStatusCommand}"
+                                        Height="34"
+                                        Width="170"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Knowledge Base"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,12"/>
+
+                                <UniformGrid Columns="3">
+
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="ChPL documents"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding ChplDocumentCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="ChPL sections"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding ChplSectionCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                    <StackPanel>
+                                        <TextBlock Text="Knowledge chunks"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding KnowledgeChunkCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                </UniformGrid>
+
+                                <UniformGrid Columns="3"
+                                             Margin="0,16,0,0">
+
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Needs review"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding NeedsReviewChunkCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,12,0">
+                                        <TextBlock Text="Reviewed"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding ReviewedChunkCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                    <StackPanel>
+                                        <TextBlock Text="Verified"
+                                                   Style="{StaticResource MutedTextStyle}"/>
+                                        <TextBlock Text="{Binding VerifiedChunkCount}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"/>
+                                    </StackPanel>
+
+                                </UniformGrid>
+
+                                <Button Content="Odśwież Knowledge Base"
+                                        Command="{Binding LoadKnowledgeBaseStatsCommand}"
+                                        Height="34"
+                                        Width="190"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Data Imports"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,12"/>
+
+                                <TextBlock Text="Import danych jest obecnie wyłączony w trybie SQLite-only. Aktualizacje będą później realizowane przez lokalne paczki danych."
+                                           TextWrapping="Wrap"
+                                           Foreground="#607D8B"/>
+
+                                <Button Content="Odśwież Data Management"
+                                        Command="{Binding LoadDataManagementCommand}"
+                                        Height="34"
+                                        Width="200"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,16,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 6 Audit Log -->
+            <TabItem>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <TextBlock Text="Audit Log"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="#102027"
+                                   Margin="0,0,0,18"/>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+
+                                <Button Content="Odśwież Audit Log"
+                                        Command="{Binding LoadAuditLogsCommand}"
+                                        Height="34"
+                                        Width="160"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,12"/>
+
+                                <DataGrid ItemsSource="{Binding AuditLogs}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          HeadersVisibility="Column"
+                                          CanUserAddRows="False">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Time"
+                                                            Binding="{Binding CreatedAt}"
+                                                            Width="180"/>
+                                        <DataGridTextColumn Header="Action"
+                                                            Binding="{Binding Action}"
+                                                            Width="180"/>
+                                        <DataGridTextColumn Header="Details"
+                                                            Binding="{Binding Details}"
+                                                            Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 7 History -->
+            <TabItem>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <TextBlock Text="Interaction History"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="#102027"
+                                   Margin="0,0,0,18"/>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+
+                                <Button Content="Odśwież historię"
+                                        Command="{Binding LoadHistoryCommand}"
+                                        Height="34"
+                                        Width="150"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,12"/>
+
+                                <DataGrid ItemsSource="{Binding InteractionHistory}"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          HeadersVisibility="Column"
+                                          CanUserAddRows="False">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Time"
+                                                            Binding="{Binding CheckedAt}"
+                                                            Width="180"/>
+                                        <DataGridTextColumn Header="Substances"
+                                                            Binding="{Binding SubstanceNames}"
+                                                            Width="*"/>
+                                        <DataGridTextColumn Header="Result"
+                                                            Binding="{Binding ResultSummary}"
+                                                            Width="260"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
     </Grid>
 </Window>

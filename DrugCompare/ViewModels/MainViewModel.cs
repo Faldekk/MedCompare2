@@ -6,18 +6,23 @@ using DrugCompare.Features.IcdLooker;
 using DrugCompare.Features.InteractionChecker;
 using DrugCompare.Features.ChPLNavigator;
 using DrugCompare.Features.PolishRegistry;
-using DrugCompare.ViewModels.Interaction;
+using DrugCompare.Application.Services.Contracts.KnowledgeBase;
 using System.Collections.ObjectModel;
+using DrugCompare.Application.Models.KnowledgeBase;
+using DrugCompare.ViewModels.Interaction;
+using DrugCompare.Features.EvidenceAssistant;
 using System.Text.Json;
 
 namespace DrugCompare.ViewModels;
 
-public sealed class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject
 {
     private readonly IDatabaseStatusService _databaseStatusService;
     private readonly IDataManagementService _dataManagementService;
     private readonly IInteractionHistoryService _interactionHistoryService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IKnowledgeBaseStatsService _knowledgeBaseStatsService;
+    private readonly IKnowledgeBaseSearchService _knowledgeBaseSearchService;
 
     private string _databaseStatusText = "Database status not loaded.";
     private string _emaImportSummary = "EMA import status not loaded.";
@@ -36,17 +41,23 @@ public sealed class MainViewModel : ObservableObject
     IDatabaseStatusService databaseStatusService,
     IDataManagementService dataManagementService,
     IInteractionHistoryService interactionHistoryService,
-    IAuditLogService auditLogService)
+    IAuditLogService auditLogService, EvidenceAssistantViewModel evidenceAssistant,
+    IKnowledgeBaseStatsService knowledgeBaseStatsService, 
+    IKnowledgeBaseSearchService knowledgeBaseSearchService)
     {
         InteractionChecker = interactionChecker;
         IcdLooker = icdLooker;
         PolishDrugRegistry = polishDrugRegistry;
         ChPLNavigator = chPLNavigator;
+        EvidenceAssistant = evidenceAssistant;
 
         _databaseStatusService = databaseStatusService;
         _dataManagementService = dataManagementService;
         _interactionHistoryService = interactionHistoryService;
         _auditLogService = auditLogService;
+        _knowledgeBaseStatsService = knowledgeBaseStatsService;
+        _knowledgeBaseSearchService = knowledgeBaseSearchService;
+
 
         LoadDatabaseStatusCommand = new AsyncRelayCommand(LoadDatabaseStatusAsync);
         LoadDataManagementCommand = new AsyncRelayCommand(LoadDataManagementAsync);
@@ -54,6 +65,30 @@ public sealed class MainViewModel : ObservableObject
         LoadAuditLogsCommand = new AsyncRelayCommand(LoadAuditLogsAsync);
     }
 
+    [ObservableProperty]
+    private int chplDocumentCount;
+
+    [ObservableProperty]
+    private int chplSectionCount;
+
+    [ObservableProperty]
+    private int knowledgeChunkCount;
+
+    [ObservableProperty]
+    private int needsReviewChunkCount;
+
+    [ObservableProperty]
+    private int reviewedChunkCount;
+
+    [ObservableProperty]
+    private string knowledgeSearchQuery = string.Empty;
+
+    [ObservableProperty]
+    private string knowledgeSearchStatus = "Gotowe.";
+
+    public ObservableCollection<KnowledgeSearchResult> KnowledgeSearchResults { get; } = new();
+    [ObservableProperty]
+    private int verifiedChunkCount;
     public InteractionCheckerViewModel InteractionChecker { get; }
 
     public IcdLookerViewModel IcdLooker { get; }
@@ -61,6 +96,8 @@ public sealed class MainViewModel : ObservableObject
     public ChPLNavigatorViewModel ChPLNavigator { get; }
 
     public PolishDrugRegistryViewModel PolishDrugRegistry { get; }
+
+    public EvidenceAssistantViewModel EvidenceAssistant { get; }
 
     public string DatabaseStatusText
     {
@@ -110,6 +147,7 @@ public sealed class MainViewModel : ObservableObject
         set => SetProperty(ref _selectedAuditLogDetails, value);
     }
 
+
     public ObservableCollection<DataSourceVersionItem> RecentDataImports { get; } = new();
 
     public ObservableCollection<InteractionHistoryItem> InteractionHistory { get; } = new();
@@ -123,6 +161,7 @@ public sealed class MainViewModel : ObservableObject
     public IAsyncRelayCommand LoadHistoryCommand { get; }
 
     public IAsyncRelayCommand LoadAuditLogsCommand { get; }
+
 
     public async Task<DatabaseStatusResult> GetDatabaseStatusForStartupAsync()
     {
@@ -198,7 +237,30 @@ public sealed class MainViewModel : ObservableObject
             IsBusy = false;
         }
     }
+    [RelayCommand]
+    private async Task SearchKnowledgeBaseAsync()
+    {
+        KnowledgeSearchResults.Clear();
 
+        if (string.IsNullOrWhiteSpace(KnowledgeSearchQuery))
+        {
+            KnowledgeSearchStatus = "Wpisz zapytanie.";
+            return;
+        }
+
+        var results = await _knowledgeBaseSearchService.SearchAsync(
+            KnowledgeSearchQuery,
+            limit: 20);
+
+        foreach (var result in results)
+        {
+            KnowledgeSearchResults.Add(result);
+        }
+
+        KnowledgeSearchStatus = results.Count == 0
+            ? "Nie znaleziono wyników w Knowledge Base."
+            : $"Znaleziono wyników: {results.Count}.";
+    }
     private static string BuildImportSummary(string sourceName, DataSourceVersionItem? item)
     {
         if (item is null)
@@ -298,7 +360,18 @@ public sealed class MainViewModel : ObservableObject
             return detailsJson;
         }
     }
+    [RelayCommand]
+    private async Task LoadKnowledgeBaseStatsAsync()
+    {
+        var stats = await _knowledgeBaseStatsService.GetStatsAsync();
 
+        ChplDocumentCount = stats.ChplDocumentCount;
+        ChplSectionCount = stats.ChplSectionCount;
+        KnowledgeChunkCount = stats.KnowledgeChunkCount;
+        NeedsReviewChunkCount = stats.NeedsReviewChunkCount;
+        ReviewedChunkCount = stats.ReviewedChunkCount;
+        VerifiedChunkCount = stats.VerifiedChunkCount;
+    }
     private async Task SafeAuditAsync(string eventType, object details)
     {
         try
