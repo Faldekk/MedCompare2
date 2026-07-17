@@ -27,7 +27,7 @@
                                FontSize="18"
                                FontWeight="Bold"/>
 
-                    <TextBlock Text="Overview of local PostgreSQL data currently used by the application."
+                    <TextBlock Text="Overview of local SQLite data currently used by the application."
                                FontSize="12"
                                Foreground="#607080"
                                Margin="0,3,0,0"/>
@@ -54,7 +54,7 @@
             </Border>
 
             <TextBlock Grid.Row="2"
-                       Text="This tab confirms that the application is running on local PostgreSQL data. Full EMA and DDInter datasets are not committed to the repository; they must be imported locally."
+                       Text="This tab confirms that the application is running on local SQLite data. Full EMA and DDInter datasets are not committed to the repository; they must be imported locally."
                        Foreground="#607080"
                        FontSize="12"
                        TextWrapping="Wrap"/>

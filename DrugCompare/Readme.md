@@ -71,7 +71,6 @@ W trybie SQLite aplikacja korzysta z repozytoriów:
 * `SqliteDrugRepository`
 * `SqliteSubstanceRepository`
 * `SqliteInteractionRepository`
-* `SqliteDrugExplorerRepository`
 * `SqlitePolishDrugRegistryRepository`
 * `SqliteIcdCodeRepository`
 * `SqliteAuditLogRepository`
@@ -303,7 +302,6 @@ In SQLite mode, the application uses:
 * `SqliteDrugRepository`
 * `SqliteSubstanceRepository`
 * `SqliteInteractionRepository`
-* `SqliteDrugExplorerRepository`
 * `SqlitePolishDrugRegistryRepository`
 * `SqliteIcdCodeRepository`
 * `SqliteAuditLogRepository`

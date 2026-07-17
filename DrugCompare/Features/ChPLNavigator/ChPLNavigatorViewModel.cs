@@ -227,9 +227,16 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
             return;
         }
 
-        await _jsonExporter.ExportAsync(_currentDocument, dialog.FileName);
-
-        StatusMessage = $"Zapisano JSON: {dialog.FileName}";
+        try
+        {
+            await _jsonExporter.ExportAsync(_currentDocument, dialog.FileName);
+            StatusMessage = $"Zapisano JSON: {dialog.FileName}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Nie udało się zapisać JSON: {ex.Message}";
+            MessageBox.Show(StatusMessage, "Błąd eksportu", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     [RelayCommand]
@@ -253,9 +260,16 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
             return;
         }
 
-        await _csvExporter.ExportAsync(_currentDocument, dialog.FileName);
-
-        StatusMessage = $"Zapisano CSV: {dialog.FileName}";
+        try
+        {
+            await _csvExporter.ExportAsync(_currentDocument, dialog.FileName);
+            StatusMessage = $"Zapisano CSV: {dialog.FileName}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Nie udało się zapisać CSV: {ex.Message}";
+            MessageBox.Show(StatusMessage, "Błąd eksportu", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     [RelayCommand]

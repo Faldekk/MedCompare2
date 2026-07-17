@@ -1,23 +1,22 @@
 using DrugCompare.Application.Repositories.Contracts;
+using DrugCompare.Application.Repositories.Contracts.KnowledgeBase;
 using DrugCompare.Application.Services.Contracts;
+using DrugCompare.Application.Services.Contracts.KnowledgeBase;
+using DrugCompare.Application.Services.Contracts.Rag;
 using DrugCompare.Application.Services.Implementations;
+using DrugCompare.Application.Services.Implementations.KnowledgeBase;
 using DrugCompare.Features.ChPLNavigator;
-using DrugCompare.Features.DrugExplorer;
+using DrugCompare.Features.EvidenceAssistant;
 using DrugCompare.Features.IcdLooker;
 using DrugCompare.Features.InteractionChecker;
 using DrugCompare.Features.PolishRegistry;
 using DrugCompare.Infrastructure.SQLite;
+using DrugCompare.Infrastructure.SQLite.KnowledgeBase;
+using DrugCompare.Infrastructure.SQLite.Rag;
 using DrugCompare.ViewModels;
 using DrugCompare.ViewModels.Interaction;
-using DrugCompare.Application.Repositories.Contracts.KnowledgeBase;
-using DrugCompare.Infrastructure.SQLite.KnowledgeBase;
-using DrugCompare.Application.Services.Contracts.Rag;
-using DrugCompare.Infrastructure.SQLite.Rag;
 using Microsoft.Extensions.Configuration;
-using DrugCompare.Application.Services.Contracts.KnowledgeBase;
-using DrugCompare.Application.Services.Implementations.KnowledgeBase;
 using Microsoft.Extensions.DependencyInjection;
-using DrugCompare.Features.EvidenceAssistant;
 
 namespace DrugCompare;
 
@@ -29,27 +28,36 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
-        var services = new ServiceCollection();
+        try
+        {
+            var services = new ServiceCollection();
 
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile(
-                "appsettings.json",
-                optional: true,
-                reloadOnChange: true)
-            .Build();
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .Build();
 
-        services.AddSingleton<IConfiguration>(configuration);
+            services.AddSingleton<IConfiguration>(configuration);
 
-        RegisterSqliteRepositories(services);
-        RegisterApplicationServices(services);
-        RegisterViewModels(services);
-        RegisterViews(services);
+            RegisterSqliteRepositories(services);
+            RegisterApplicationServices(services);
+            RegisterViewModels(services);
+            RegisterViews(services);
 
-        _serviceProvider = services.BuildServiceProvider();
+            _serviceProvider = services.BuildServiceProvider();
 
-        var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-        mainWindow.Show();
+            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+            mainWindow.Show();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"Nie można uruchomić aplikacji. Sprawdź plik appsettings.json i bazę danych.\n\n{ex.Message}",
+                "Błąd uruchamiania",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+            Shutdown(-1);
+        }
     }
 
     protected override void OnExit(System.Windows.ExitEventArgs e)
@@ -65,12 +73,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDrugRepository, SqliteDrugRepository>();
         services.AddSingleton<ISubstanceRepository, SqliteSubstanceRepository>();
         services.AddSingleton<IInteractionRepository, SqliteInteractionRepository>();
-        services.AddSingleton<IDrugExplorerRepository, SqliteDrugExplorerRepository>();
         services.AddSingleton<IInteractionHistoryRepository, SqliteInteractionHistoryRepository>();
         services.AddSingleton<IPolishDrugRegistryRepository, SqlitePolishDrugRegistryRepository>();
         services.AddSingleton<IIcdCodeRepository, SqliteIcdCodeRepository>();
         services.AddSingleton<IAuditLogRepository, SqliteAuditLogRepository>();
-        services.AddSingleton<IKnowledgeBaseIngestionService, KnowledgeBaseIngestionService>();
         services.AddSingleton<IChplDocumentRepository, SqliteChplDocumentRepository>();
         services.AddSingleton<IChplSectionRepository, SqliteChplSectionRepository>();
         services.AddSingleton<IKnowledgeChunkRepository, SqliteKnowledgeChunkRepository>();
@@ -95,9 +101,6 @@ public partial class App : System.Windows.Application
             sp.GetRequiredService<DrugDataService>());
 
         services.AddSingleton<IInteractionHistoryService>(sp =>
-            sp.GetRequiredService<DrugDataService>());
-
-        services.AddSingleton<IDrugExplorerService>(sp =>
             sp.GetRequiredService<DrugDataService>());
 
         services.AddSingleton<IPolishDrugRegistryService, PolishDrugRegistryService>();

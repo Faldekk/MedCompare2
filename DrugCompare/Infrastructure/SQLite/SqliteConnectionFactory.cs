@@ -20,11 +20,17 @@ public class SqliteConnectionFactory
             builder.DataSource = Path.Combine(AppContext.BaseDirectory, builder.DataSource);
         }
 
-        var directory = Path.GetDirectoryName(builder.DataSource);
-
-        if (!string.IsNullOrWhiteSpace(directory))
+        if (string.IsNullOrWhiteSpace(builder.DataSource) || !File.Exists(builder.DataSource))
         {
-            Directory.CreateDirectory(directory);
+            throw new FileNotFoundException(
+                "Nie znaleziono lokalnej bazy danych SQLite.",
+                builder.DataSource);
+        }
+
+        if (new FileInfo(builder.DataSource).Length < 1024)
+        {
+            throw new InvalidOperationException(
+                $"Baza SQLite jest pusta lub uszkodzona: {builder.DataSource}");
         }
 
         _connectionString = builder.ToString();

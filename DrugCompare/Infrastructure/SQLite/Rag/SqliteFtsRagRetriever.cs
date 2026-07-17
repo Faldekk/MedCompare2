@@ -3,7 +3,6 @@ using DrugCompare.Application.Services.Contracts.Rag;
 using Microsoft.Data.Sqlite;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
-using System.Text;
 
 namespace DrugCompare.Infrastructure.SQLite.Rag;
 

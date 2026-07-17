@@ -4,5 +4,5 @@ namespace DrugCompare.Application.Repositories.Contracts;
 
 public interface IPolishDrugRegistryRepository
 {
-    Task<List<PolishDrugRegistryItem>> SearchAsync(string query, int limit = 50);
+    Task<List<PolishDrugRegistryItem>> SearchAsync(string query, int limit = 100);
 }

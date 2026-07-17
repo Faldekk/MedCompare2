@@ -91,7 +91,7 @@ public sealed class SqliteInteractionHistoryRepository : IInteractionHistoryRepo
 
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
-        command.Parameters.AddWithValue("@limit", limit);
+        command.Parameters.AddWithValue("@limit", Math.Clamp(limit, 1, 500));
 
         await using var reader = await command.ExecuteReaderAsync();
 

@@ -9,27 +9,23 @@ public sealed class DrugDataService :
     ISubstanceLookupService,
     ISubstanceSynonymService,
     IInteractionCheckerService,
-    IInteractionHistoryService,
-    IDrugExplorerService
+    IInteractionHistoryService
 {
     private readonly IDrugRepository _drugRepository;
     private readonly ISubstanceRepository _substanceRepository;
     private readonly IInteractionRepository _interactionRepository;
     private readonly IInteractionHistoryRepository _interactionHistoryRepository;
-    private readonly IDrugExplorerRepository _drugExplorerRepository;
 
     public DrugDataService(
         IDrugRepository drugRepository,
         ISubstanceRepository substanceRepository,
         IInteractionRepository interactionRepository,
-        IInteractionHistoryRepository interactionHistoryRepository,
-        IDrugExplorerRepository drugExplorerRepository)
+        IInteractionHistoryRepository interactionHistoryRepository)
     {
         _drugRepository = drugRepository;
         _substanceRepository = substanceRepository;
         _interactionRepository = interactionRepository;
         _interactionHistoryRepository = interactionHistoryRepository;
-        _drugExplorerRepository = drugExplorerRepository;
     }
 
     public Task<DrugLookupResult?> FindDrugAsync(string drugName)
@@ -80,10 +76,4 @@ public sealed class DrugDataService :
         return _interactionHistoryRepository.GetRecentHistoryAsync(limit);
     }
 
-    public Task<List<DrugExplorerResult>> SearchAsync(
-        string query,
-        int limit = 50)
-    {
-        return _drugExplorerRepository.SearchAsync(query, limit);
-    }
 }

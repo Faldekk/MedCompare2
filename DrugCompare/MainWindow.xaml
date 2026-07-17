@@ -290,7 +290,8 @@
 
             <!-- 3 Polish Registry -->
             <TabItem>
-                <polishRegistry:PolishRegistryView DataContext="{Binding PolishRegistry}"/>
+                <polishRegistry:PolishRegistryView
+                    DataContext="{Binding DataContext.PolishDrugRegistry, RelativeSource={RelativeSource AncestorType=Window}}"/>
             </TabItem>
 
             <!-- 4 ICD Looker -->

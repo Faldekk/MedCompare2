@@ -44,8 +44,8 @@ public sealed class SqlitePolishDrugRegistryRepository : IPolishDrugRegistryRepo
 
         if (!string.IsNullOrWhiteSpace(query))
         {
+            sql += Environment.NewLine;
             sql += """
-                
                 AND (
                     product_name LIKE @query COLLATE NOCASE
                     OR normalized_product_name LIKE @query COLLATE NOCASE
@@ -60,7 +60,6 @@ public sealed class SqlitePolishDrugRegistryRepository : IPolishDrugRegistryRepo
         }
 
         sql += """
-            
             ORDER BY
                 CASE
                     WHEN product_name = @exactQuery COLLATE NOCASE THEN 0
@@ -81,7 +80,7 @@ public sealed class SqlitePolishDrugRegistryRepository : IPolishDrugRegistryRepo
         command.Parameters.AddWithValue("@query", $"%{trimmedQuery}%");
         command.Parameters.AddWithValue("@exactQuery", trimmedQuery);
         command.Parameters.AddWithValue("@startsWithQuery", $"{trimmedQuery}%");
-        command.Parameters.AddWithValue("@limit", limit);
+        command.Parameters.AddWithValue("@limit", Math.Clamp(limit, 1, 500));
 
         await using var reader = await command.ExecuteReaderAsync();
 

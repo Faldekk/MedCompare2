@@ -30,7 +30,7 @@
                                FontWeight="Bold"
                                Foreground="#1B2A38"/>
 
-                    <TextBlock Text="Local PostgreSQL dataset statistics"
+                    <TextBlock Text="Local SQLite dataset statistics"
                                FontSize="13"
                                Foreground="#607080"
                                Margin="0,4,0,0"/>

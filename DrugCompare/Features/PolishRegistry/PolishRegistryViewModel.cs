@@ -76,15 +76,21 @@ public sealed partial class PolishDrugRegistryViewModel : ObservableObject
     [RelayCommand]
     private async Task SearchAsync()
     {
+        await SearchAsync(SearchText);
+    }
+
+    public async Task SearchAsync(string query)
+    {
         try
         {
             IsBusy = true;
+            SearchText = query;
             StatusMessage = "Wyszukiwanie w Polskim Rejestrze Produktów Leczniczych...";
 
             Results.Clear();
             SelectedResult = null;
 
-            var items = await _polishDrugRegistryService.SearchAsync(SearchText, limit: 100);
+            var items = await _polishDrugRegistryService.SearchAsync(query, limit: 100);
 
             foreach (var item in items)
             {
@@ -98,6 +104,11 @@ public sealed partial class PolishDrugRegistryViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusMessage = $"Błąd wyszukiwania w rejestrze: {ex.Message}";
+            MessageBox.Show(
+                StatusMessage,
+                "Błąd Polish Registry",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
         finally
         {
