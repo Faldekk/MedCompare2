@@ -12,6 +12,8 @@ using DrugCompare.Application.Models.KnowledgeBase;
 using DrugCompare.ViewModels.Interaction;
 using DrugCompare.Features.EvidenceAssistant;
 using System.Text.Json;
+using Microsoft.Win32;
+using System.Windows;
 
 namespace DrugCompare.ViewModels;
 
@@ -23,6 +25,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IAuditLogService _auditLogService;
     private readonly IKnowledgeBaseStatsService _knowledgeBaseStatsService;
     private readonly IKnowledgeBaseSearchService _knowledgeBaseSearchService;
+    private readonly ILocalDatabaseBackupService _databaseBackupService;
 
     private string _databaseStatusText = "Database status not loaded.";
     private string _emaImportSummary = "EMA import status not loaded.";
@@ -42,8 +45,9 @@ public sealed partial class MainViewModel : ObservableObject
     IDataManagementService dataManagementService,
     IInteractionHistoryService interactionHistoryService,
     IAuditLogService auditLogService, EvidenceAssistantViewModel evidenceAssistant,
-    IKnowledgeBaseStatsService knowledgeBaseStatsService, 
-    IKnowledgeBaseSearchService knowledgeBaseSearchService)
+    IKnowledgeBaseStatsService knowledgeBaseStatsService,
+    IKnowledgeBaseSearchService knowledgeBaseSearchService,
+    ILocalDatabaseBackupService databaseBackupService)
     {
         InteractionChecker = interactionChecker;
         IcdLooker = icdLooker;
@@ -57,6 +61,7 @@ public sealed partial class MainViewModel : ObservableObject
         _auditLogService = auditLogService;
         _knowledgeBaseStatsService = knowledgeBaseStatsService;
         _knowledgeBaseSearchService = knowledgeBaseSearchService;
+        _databaseBackupService = databaseBackupService;
 
 
         LoadDatabaseStatusCommand = new AsyncRelayCommand(LoadDatabaseStatusAsync);
@@ -236,6 +241,39 @@ public sealed partial class MainViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task CreateDatabaseBackupAsync()
+    {
+        var dialog = new SaveFileDialog { Title = "Zapisz kopię bazy SQLite", Filter = "SQLite database (*.db)|*.db", FileName = $"medcompare-backup-{DateTime.Now:yyyyMMdd-HHmm}.db" };
+        if (dialog.ShowDialog() != true) return;
+        try
+        {
+            IsBusy = true;
+            await _databaseBackupService.CreateBackupAsync(dialog.FileName);
+            StatusMessage = $"Utworzono kopię bazy: {dialog.FileName}";
+            await SafeAuditAsync("DatabaseBackupCreated", new { Path = dialog.FileName, Timestamp = DateTime.UtcNow });
+        }
+        catch (Exception ex) { StatusMessage = $"Tworzenie kopii nie powiodło się: {ex.Message}"; }
+        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task RestoreDatabaseBackupAsync()
+    {
+        var dialog = new OpenFileDialog { Title = "Wybierz kopię SQLite do przywrócenia", Filter = "SQLite database (*.db)|*.db" };
+        if (dialog.ShowDialog() != true) return;
+        var confirmation = MessageBox.Show("Aktualna baza zostanie zastąpiona. Przed podmianą aplikacja utworzy automatyczną kopię bezpieczeństwa. Kontynuować?", "Przywracanie bazy", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirmation != MessageBoxResult.Yes) return;
+        try
+        {
+            IsBusy = true;
+            var safetyCopy = await _databaseBackupService.RestoreAsync(dialog.FileName);
+            StatusMessage = $"Przywrócono bazę. Kopia sprzed przywrócenia: {safetyCopy}. Uruchom aplikację ponownie.";
+        }
+        catch (Exception ex) { StatusMessage = $"Przywracanie nie powiodło się: {ex.Message}"; }
+        finally { IsBusy = false; }
     }
     [RelayCommand]
     private async Task SearchKnowledgeBaseAsync()

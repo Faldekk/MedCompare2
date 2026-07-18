@@ -12,18 +12,12 @@ public sealed class KnowledgeBaseIngestionService : IKnowledgeBaseIngestionServi
     private const string ParserVersion = "chpl-parser-v1";
     private const string DefaultReviewStatus = "needs_review";
 
-    private readonly IChplDocumentRepository _documentRepository;
-    private readonly IChplSectionRepository _sectionRepository;
-    private readonly IKnowledgeChunkRepository _chunkRepository;
+    private readonly IAtomicKnowledgeBaseIngestionRepository _ingestionRepository;
 
     public KnowledgeBaseIngestionService(
-        IChplDocumentRepository documentRepository,
-        IChplSectionRepository sectionRepository,
-        IKnowledgeChunkRepository chunkRepository)
+        IAtomicKnowledgeBaseIngestionRepository ingestionRepository)
     {
-        _documentRepository = documentRepository;
-        _sectionRepository = sectionRepository;
-        _chunkRepository = chunkRepository;
+        _ingestionRepository = ingestionRepository;
     }
 
     public async Task<KnowledgeBaseIngestionResult> IngestChplDocumentAsync(
@@ -37,30 +31,14 @@ public sealed class KnowledgeBaseIngestionService : IKnowledgeBaseIngestionServi
             throw new InvalidOperationException("Cannot ingest ChPL document without parsed sections.");
         }
 
-        if (!string.IsNullOrWhiteSpace(fileHash))
-        {
-            var existingDocument = await _documentRepository.GetByFileHashAsync(
-                fileHash,
-                cancellationToken);
-
-            if (existingDocument is not null)
-            {
-                return new KnowledgeBaseIngestionResult
-                {
-                    ChplDocumentId = existingDocument.Id,
-                    SectionsSaved = 0,
-                    ChunksSaved = 0,
-                    ReviewStatus = existingDocument.ReviewStatus,
-                    WasAlreadyImported = true
-                };
-            }
-        }
-
         var now = DateTime.UtcNow;
 
         var documentRecord = new ChplDocumentRecord
         {
+            RplProductId = document.RplProductId,
             ProductName = document.ProductName,
+            ActiveSubstanceText = document.ActiveSubstanceText,
+            ChplUrl = document.ChplUrl,
             SourceFile = document.SourceFile,
             LocalFilePath = localFilePath,
             FileHash = fileHash,
@@ -72,15 +50,10 @@ public sealed class KnowledgeBaseIngestionService : IKnowledgeBaseIngestionServi
             ParsedAt = document.ParsedAt
         };
 
-        var documentId = await _documentRepository.AddAsync(
-            documentRecord,
-            cancellationToken);
-
         var sectionRecords = document.Sections
             .Where(section => !string.IsNullOrWhiteSpace(section.Text))
             .Select(section => new ChplSectionRecord
             {
-                ChplDocumentId = documentId,
                 SectionNumber = section.SectionNumber,
                 SectionTitle = section.Title,
                 SectionType = ResolveSectionType(section.SectionNumber),
@@ -91,55 +64,7 @@ public sealed class KnowledgeBaseIngestionService : IKnowledgeBaseIngestionServi
             })
             .ToList();
 
-        await _sectionRepository.AddRangeAsync(
-            sectionRecords,
-            cancellationToken);
-
-        var savedSections = await _sectionRepository.GetByDocumentIdAsync(
-            documentId,
-            cancellationToken);
-
-        var chunks = savedSections
-            .Select(section => new KnowledgeChunk
-            {
-                SourceType = "ChPL",
-                SourceId = section.Id,
-                SourceTitle = BuildSourceTitle(document, section),
-                ProductName = document.ProductName,
-                ActiveSubstance = null,
-                SectionNumber = section.SectionNumber,
-                SectionTitle = section.SectionTitle,
-                ChunkText = section.Text,
-                ChunkHash = ComputeChunkHash(document, section),
-                ReviewStatus = DefaultReviewStatus,
-                SourceUrl = null,
-                CreatedAt = now
-            })
-            .ToList();
-
-        await _chunkRepository.AddRangeAsync(
-            chunks,
-            cancellationToken);
-
-        return new KnowledgeBaseIngestionResult
-        {
-            ChplDocumentId = documentId,
-            SectionsSaved = sectionRecords.Count,
-            ChunksSaved = chunks.Count,
-            ReviewStatus = DefaultReviewStatus,
-            WasAlreadyImported = false
-        };
-    }
-
-    private static string BuildSourceTitle(
-        ChplDocument document,
-        ChplSectionRecord section)
-    {
-        var productName = string.IsNullOrWhiteSpace(document.ProductName)
-            ? "unknown product"
-            : document.ProductName;
-
-        return $"ChPL {productName}, section {section.SectionNumber}";
+        return await _ingestionRepository.IngestAsync(documentRecord, sectionRecords, cancellationToken);
     }
 
     private static string ResolveSectionType(string sectionNumber)
@@ -161,21 +86,6 @@ public sealed class KnowledgeBaseIngestionService : IKnowledgeBaseIngestionServi
             "6.1" => "excipients",
             _ => "unknown"
         };
-    }
-
-    private static string ComputeChunkHash(
-        ChplDocument document,
-        ChplSectionRecord section)
-    {
-        var input = string.Join(
-            "|",
-            document.SourceFile,
-            document.ProductName,
-            section.SectionNumber,
-            section.SectionTitle,
-            section.TextHash);
-
-        return ComputeSha256(input);
     }
 
     private static string ComputeSha256(string value)

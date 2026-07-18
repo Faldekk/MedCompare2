@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DrugCompare.Application.Models;
 using DrugCompare.Application.Services.Contracts;
+using DrugCompare.Features.ChPLNavigator;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
@@ -11,6 +12,7 @@ namespace DrugCompare.Features.PolishRegistry;
 public sealed partial class PolishDrugRegistryViewModel : ObservableObject
 {
     private readonly IPolishDrugRegistryService _polishDrugRegistryService;
+    private readonly ChPLNavigatorViewModel _chplNavigator;
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -57,9 +59,12 @@ public sealed partial class PolishDrugRegistryViewModel : ObservableObject
         }
     }
 
-    public PolishDrugRegistryViewModel(IPolishDrugRegistryService polishDrugRegistryService)
+    public PolishDrugRegistryViewModel(
+        IPolishDrugRegistryService polishDrugRegistryService,
+        ChPLNavigatorViewModel chplNavigator)
     {
         _polishDrugRegistryService = polishDrugRegistryService;
+        _chplNavigator = chplNavigator;
     }
     [RelayCommand]
     private void OpenChpl()
@@ -77,6 +82,19 @@ public sealed partial class PolishDrugRegistryViewModel : ObservableObject
     private async Task SearchAsync()
     {
         await SearchAsync(SearchText);
+    }
+
+    [RelayCommand]
+    private void SendToChplNavigator()
+    {
+        if (SelectedResult is null)
+        {
+            StatusMessage = "Najpierw wybierz produkt z wyników.";
+            return;
+        }
+
+        _chplNavigator.SetProductContext(SelectedResult);
+        StatusMessage = "Produkt przekazano do ChPL Navigator. Otwórz moduł ChPL Navigator i wybierz plik PDF.";
     }
 
     public async Task SearchAsync(string query)

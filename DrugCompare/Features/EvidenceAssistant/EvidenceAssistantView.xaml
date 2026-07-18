@@ -97,6 +97,7 @@
                 Padding="12">
 
             <DataGrid ItemsSource="{Binding Results}"
+                      SelectedItem="{Binding SelectedResult}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       HeadersVisibility="Column"
@@ -120,6 +121,18 @@
                                         Binding="{Binding ReviewStatus}"
                                         Width="120"/>
 
+                    <DataGridTextColumn Header="Kategoria"
+                                        Binding="{Binding ClinicalCategory}"
+                                        Width="140"/>
+
+                    <DataGridTextColumn Header="Substancja czynna"
+                                        Binding="{Binding ActiveSubstance}"
+                                        Width="170"/>
+
+                    <DataGridTextColumn Header="Źródło URL"
+                                        Binding="{Binding SourceUrl}"
+                                        Width="220"/>
+
                     <DataGridTextColumn Header="Tekst"
                                         Binding="{Binding ChunkText}"
                                         Width="*"/>
@@ -128,9 +141,24 @@
             </DataGrid>
         </Border>
 
-        <TextBlock Grid.Row="3"
-                   Text="{Binding StatusMessage}"
-                   Foreground="#607D8B"
-                   Margin="0,10,0,0"/>
+        <StackPanel Grid.Row="3" Margin="0,10,0,0">
+            <WrapPanel Margin="0,0,0,6">
+                <TextBox Text="{Binding ReviewerName, UpdateSourceTrigger=PropertyChanged}"
+                         Width="180" Height="30" Margin="0,0,8,0"
+                         VerticalContentAlignment="Center"
+                         ToolTip="Osoba weryfikująca"/>
+                <TextBox Text="{Binding ReviewNote, UpdateSourceTrigger=PropertyChanged}"
+                         Width="260" Height="30" Margin="0,0,8,0"
+                         VerticalContentAlignment="Center"
+                         ToolTip="Notatka weryfikacji"/>
+                <Button Content="Reviewed" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="reviewed" Height="30" Margin="0,0,6,0"/>
+                <Button Content="Verified" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="verified" Height="30" Margin="0,0,6,0"/>
+                <Button Content="Rejected" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="rejected" Height="30"/>
+                <Button Content="Otwórz źródło" Command="{Binding OpenSelectedSourceCommand}" Height="30" Margin="8,0,0,0"/>
+            </WrapPanel>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#607D8B"/>
+            <TextBlock Text="Źródła ze statusem needs_review są wykluczone domyślnie. Ich obecność oznacza dane nieweryfikowane."
+                       Foreground="#A15C00" FontSize="12" Margin="0,4,0,0"/>
+        </StackPanel>
     </Grid>
 </UserControl>

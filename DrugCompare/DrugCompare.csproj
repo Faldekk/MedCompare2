@@ -13,6 +13,10 @@
 		<EmbeddedResource Remove="data2\**" />
 		<None Remove="data2\**" />
 		<Page Remove="data2\**" />
+		<Compile Remove="DrugCompare.Tests\**" />
+		<EmbeddedResource Remove="DrugCompare.Tests\**" />
+		<None Remove="DrugCompare.Tests\**" />
+		<Compile Remove="PolishDrugRegistryRepositoryTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -33,6 +37,14 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
 		</None>
+  <None Update="database\schema_sqlite.sql">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+  </None>
+  <None Update="database\migrations\**\*.sql">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+  </None>
 	</ItemGroup>
 
 	<ItemGroup>

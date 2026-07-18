@@ -5,6 +5,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DrugCompare.Application.Services.Contracts.KnowledgeBase;
+using DrugCompare.Application.Models;
 using DrugCompare.Features.ChPLNavigator.Models;
 using DrugCompare.Features.ChPLNavigator.Services;
 using Microsoft.Win32;
@@ -45,7 +46,25 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
     [ObservableProperty]
     private bool isBusy;
 
+    [ObservableProperty]
+    private ChplProductContext? selectedProductContext;
+
     public ObservableCollection<ChplSection> Sections { get; } = new();
+
+    public void SetProductContext(PolishDrugRegistryItem product)
+    {
+        SelectedProductContext = new ChplProductContext
+        {
+            RplProductId = product.Id,
+            ProductName = product.ProductName,
+            ActiveSubstanceText = product.ActiveSubstanceText,
+            Strength = product.Strength,
+            PharmaceuticalForm = product.PharmaceuticalForm,
+            ChplUrl = product.ChplUrl
+        };
+
+        StatusMessage = $"Wybrano produkt RPL: {product.ProductName}. Wybierz lokalny plik ChPL PDF.";
+    }
 
     [RelayCommand]
     private void OpenRawTextWindow()
@@ -122,10 +141,13 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
 
             _currentDocument = new ChplDocument
             {
+                RplProductId = SelectedProductContext?.RplProductId,
                 SourceFile = Path.GetFileName(filePath),
                 DocumentType = "ChPL",
                 Language = "pl",
-                ProductName = ExtractProductNameFromFileName(filePath),
+                ProductName = SelectedProductContext?.ProductName ?? ExtractProductNameFromFileName(filePath),
+                ActiveSubstanceText = SelectedProductContext?.ActiveSubstanceText,
+                ChplUrl = SelectedProductContext?.ChplUrl,
                 ParsedAt = DateTime.UtcNow,
                 Sections = parsedSections
             };
@@ -284,6 +306,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
 
         _currentDocument = null;
         _currentFileHash = null;
+        SelectedProductContext = null;
     }
 
     private string BuildOutputFileName(string extension)

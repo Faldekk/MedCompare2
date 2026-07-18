@@ -334,6 +334,12 @@
                                 Margin="0,8,0,16">
 
                                 <Button
+                                    Content="Przekaż do ChPL"
+                                    Command="{Binding SendToChplNavigatorCommand}"
+                                    MinWidth="145"
+                                    Margin="0,0,8,0" />
+
+                                <Button
                                     Content="Otwórz ChPL"
                                     Command="{Binding OpenChplCommand}"
                                     MinWidth="120"

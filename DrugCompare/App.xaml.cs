@@ -17,6 +17,8 @@ using DrugCompare.ViewModels;
 using DrugCompare.ViewModels.Interaction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using System.Windows.Threading;
 
 namespace DrugCompare;
 
@@ -24,9 +26,10 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
 
-    protected override void OnStartup(System.Windows.StartupEventArgs e)
+    protected override async void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
 
         try
         {
@@ -45,18 +48,46 @@ public partial class App : System.Windows.Application
             RegisterViews(services);
 
             _serviceProvider = services.BuildServiceProvider();
+            await _serviceProvider.GetRequiredService<SqliteDatabaseInitializer>()
+                .InitializeAsync();
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
         }
         catch (Exception ex)
         {
+            WriteStartupError(ex);
             System.Windows.MessageBox.Show(
-                $"Nie można uruchomić aplikacji. Sprawdź plik appsettings.json i bazę danych.\n\n{ex.Message}",
+                $"Nie można uruchomić aplikacji. Szczegóły zapisano w startup-error.log.\n\n{ex.Message}",
                 "Błąd uruchamiania",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Error);
             Shutdown(-1);
+        }
+    }
+
+    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        WriteStartupError(e.Exception);
+        System.Windows.MessageBox.Show(
+            $"Nieobsłużony błąd aplikacji. Szczegóły zapisano w startup-error.log.\n\n{e.Exception.Message}",
+            "Błąd aplikacji",
+            System.Windows.MessageBoxButton.OK,
+            System.Windows.MessageBoxImage.Error);
+        e.Handled = true;
+    }
+
+    private static void WriteStartupError(Exception exception)
+    {
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(AppContext.BaseDirectory, "startup-error.log"),
+                $"[{DateTime.Now:O}]\n{exception}\n\n");
+        }
+        catch
+        {
+            // The error dialog remains available even if the folder is read-only.
         }
     }
 
@@ -69,6 +100,8 @@ public partial class App : System.Windows.Application
     private static void RegisterSqliteRepositories(IServiceCollection services)
     {
         services.AddSingleton<SqliteConnectionFactory>();
+        services.AddSingleton<SqliteDatabaseInitializer>();
+        services.AddSingleton<ILocalDatabaseBackupService, SqliteLocalDatabaseBackupService>();
 
         services.AddSingleton<IDrugRepository, SqliteDrugRepository>();
         services.AddSingleton<ISubstanceRepository, SqliteSubstanceRepository>();
@@ -80,6 +113,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IChplDocumentRepository, SqliteChplDocumentRepository>();
         services.AddSingleton<IChplSectionRepository, SqliteChplSectionRepository>();
         services.AddSingleton<IKnowledgeChunkRepository, SqliteKnowledgeChunkRepository>();
+        services.AddSingleton<IAtomicKnowledgeBaseIngestionRepository, SqliteAtomicKnowledgeBaseIngestionRepository>();
+        services.AddSingleton<IKnowledgeBaseReviewRepository, SqliteKnowledgeBaseReviewRepository>();
         services.AddSingleton<IDatabaseStatusRepository, SqliteDatabaseStatusRepository>();
         services.AddSingleton<IDataManagementRepository, DisabledDataManagementRepository>();
     }
@@ -108,6 +143,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAuditLogService, AuditLogService>();
         services.AddSingleton<IRagRetriever, SqliteFtsRagRetriever>();
         services.AddSingleton<IKnowledgeBaseIngestionService, KnowledgeBaseIngestionService>();
+        services.AddSingleton<IKnowledgeBaseReviewService, KnowledgeBaseReviewService>();
         services.AddSingleton<IKnowledgeBaseStatsService, KnowledgeBaseStatsService>();
         services.AddSingleton<IDatabaseStatusService, DatabaseStatusService>();
         services.AddSingleton<IKnowledgeBaseSearchService, KnowledgeBaseSearchService>();

@@ -33,6 +33,10 @@ public class SqliteConnectionFactory
                 $"Baza SQLite jest pusta lub uszkodzona: {builder.DataSource}");
         }
 
+        // These settings are connection-scoped, unlike WAL mode configured by migrations.
+        builder.ForeignKeys = true;
+        builder.DefaultTimeout = 5;
+
         _connectionString = builder.ToString();
     }
 
@@ -40,4 +44,6 @@ public class SqliteConnectionFactory
     {
         return new SqliteConnection(_connectionString);
     }
+
+    public string DatabasePath => new SqliteConnectionStringBuilder(_connectionString).DataSource;
 }

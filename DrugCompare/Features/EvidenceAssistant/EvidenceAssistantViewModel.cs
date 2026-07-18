@@ -3,16 +3,20 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DrugCompare.Application.Models.Rag;
 using DrugCompare.Application.Services.Contracts.Rag;
+using DrugCompare.Application.Services.Contracts.KnowledgeBase;
+using System.Diagnostics;
 
 namespace DrugCompare.Features.EvidenceAssistant;
 
 public sealed partial class EvidenceAssistantViewModel : ObservableObject
 {
     private readonly IRagRetriever _ragRetriever;
+    private readonly IKnowledgeBaseReviewService _reviewService;
 
-    public EvidenceAssistantViewModel(IRagRetriever ragRetriever)
+    public EvidenceAssistantViewModel(IRagRetriever ragRetriever, IKnowledgeBaseReviewService reviewService)
     {
         _ragRetriever = ragRetriever;
+        _reviewService = reviewService;
     }
 
     [ObservableProperty]
@@ -25,13 +29,22 @@ public sealed partial class EvidenceAssistantViewModel : ObservableObject
     private string sectionNumber = string.Empty;
 
     [ObservableProperty]
-    private bool includeNeedsReview = true;
+    private bool includeNeedsReview;
 
     [ObservableProperty]
     private string statusMessage = "Gotowe.";
 
     [ObservableProperty]
     private bool isBusy;
+
+    [ObservableProperty]
+    private KnowledgeChunkResult? selectedResult;
+
+    [ObservableProperty]
+    private string reviewerName = string.Empty;
+
+    [ObservableProperty]
+    private string reviewNote = string.Empty;
 
     public ObservableCollection<KnowledgeChunkResult> Results { get; } = new();
 
@@ -90,5 +103,50 @@ public sealed partial class EvidenceAssistantViewModel : ObservableObject
         SectionNumber = string.Empty;
         Results.Clear();
         StatusMessage = "Wyczyszczono.";
+    }
+
+    [RelayCommand]
+    private async Task ChangeReviewStatusAsync(string? status)
+    {
+        if (SelectedResult is null)
+        {
+            StatusMessage = "Wybierz źródło do weryfikacji.";
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            await _reviewService.ReviewDocumentForChunkAsync(SelectedResult.Id, status ?? string.Empty, ReviewerName, ReviewNote);
+            StatusMessage = $"Dokument źródłowy oznaczono jako: {status}.";
+            await SearchAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Nie udało się zmienić statusu: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenSelectedSource()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedResult?.SourceUrl))
+        {
+            StatusMessage = "Wybrane źródło nie ma adresu URL.";
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = SelectedResult.SourceUrl, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Nie udało się otworzyć źródła: {ex.Message}";
+        }
     }
 }

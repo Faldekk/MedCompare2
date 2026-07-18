@@ -6,6 +6,7 @@ public sealed class ChplDocumentRecord
     public long? RplProductId { get; set; }
 
     public string? ProductName { get; set; }
+    public string? ActiveSubstanceText { get; set; }
     public string? ChplUrl { get; set; }
 
     public string? SourceFile { get; set; }

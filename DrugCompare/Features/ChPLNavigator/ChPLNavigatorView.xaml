@@ -93,6 +93,12 @@
                                TextWrapping="Wrap"
                                Margin="0,3,0,8"/>
 
+                    <TextBlock Text="{Binding SelectedProductContext.ProductName, StringFormat=Produkt RPL: {0}, TargetNullValue=Brak przekazanego produktu RPL.}"
+                               FontSize="13"
+                               Foreground="#374151"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"/>
+
                     <TextBlock Text="{Binding StatusMessage}"
                                FontSize="13"
                                Foreground="#2563EB"

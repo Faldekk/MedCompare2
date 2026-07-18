@@ -1,8 +1,8 @@
 ﻿using DrugCompare.Application.Models.Rag;
 using DrugCompare.Application.Services.Contracts.Rag;
+using DrugCompare.Application.Services.Implementations.Rag;
 using Microsoft.Data.Sqlite;
 using System.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace DrugCompare.Infrastructure.SQLite.Rag;
 
@@ -32,7 +32,8 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
             return [];
         }
 
-        var sql = BuildSql(options, allowedStatuses);
+        var intent = QueryIntentClassifier.Classify(query);
+        var sql = BuildSql(options, allowedStatuses, QueryIntentClassifier.PreferredSections(intent));
 
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
@@ -72,7 +73,8 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
 
     private static string BuildSql(
         RagRetrievalOptions options,
-        IReadOnlyList<string> allowedStatuses)
+        IReadOnlyList<string> allowedStatuses,
+        IReadOnlyList<string> preferredSections)
     {
         var builder = new StringBuilder();
 
@@ -88,6 +90,9 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
                 k.section_title,
                 k.chunk_text,
                 k.review_status,
+                k.clinical_category,
+                k.clinical_priority,
+                k.evidence_kind,
                 k.source_url
             FROM knowledge_chunks_fts
             JOIN knowledge_chunks k ON k.id = knowledge_chunks_fts.rowid
@@ -110,8 +115,12 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
             builder.AppendLine("AND k.section_number = @section_number");
         }
 
-        builder.AppendLine("""
-            ORDER BY rank
+        var sectionRank = preferredSections.Count == 0
+            ? "k.id"
+            : $"CASE k.section_number {string.Join(" ", preferredSections.Select((section, index) => $"WHEN '{section}' THEN {index}"))} ELSE {preferredSections.Count} END";
+
+        builder.AppendLine($"""
+            ORDER BY {sectionRank}, k.clinical_priority DESC, rank
             LIMIT @limit;
         """);
 
@@ -167,6 +176,9 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
             SectionTitle = GetNullableString(reader, "section_title"),
             ChunkText = GetString(reader, "chunk_text"),
             ReviewStatus = GetString(reader, "review_status"),
+            ClinicalCategory = GetNullableString(reader, "clinical_category"),
+            ClinicalPriority = reader.GetInt32(reader.GetOrdinal("clinical_priority")),
+            EvidenceKind = GetString(reader, "evidence_kind"),
             SourceUrl = GetNullableString(reader, "source_url")
         };
     }
