@@ -64,6 +64,11 @@ public sealed class KnowledgeBaseIngestionService : IKnowledgeBaseIngestionServi
             })
             .ToList();
 
+        if (sectionRecords.Count == 0)
+        {
+            throw new InvalidOperationException("Cannot ingest ChPL document without non-empty parsed sections.");
+        }
+
         return await _ingestionRepository.IngestAsync(documentRecord, sectionRecords, cancellationToken);
     }
 

@@ -97,6 +97,26 @@ public sealed class PolishDrugRegistryRepositoryTests
     }
 
     [TestMethod]
+    public async Task RagRetriever_ReturnsNoResultsForQueryWithOnlyShortTerms()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"drugcompare-rag-short-{Guid.NewGuid():N}.db");
+        try
+        {
+            await CreateKnowledgeBaseDatabaseAsync(databasePath);
+            var retriever = new SqliteFtsRagRetriever(CreateConnectionFactory(databasePath));
+
+            var results = await retriever.RetrieveAsync("a i", new RagRetrievalOptions());
+
+            Assert.AreEqual(0, results.Count);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(databasePath)) File.Delete(databasePath);
+        }
+    }
+
+    [TestMethod]
     public async Task LocalDatabaseBackupService_RestoresBackupAfterDatabaseChanges()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"drugcompare-backup-{Guid.NewGuid():N}.db");
@@ -129,6 +149,38 @@ public sealed class PolishDrugRegistryRepositoryTests
             SqliteConnection.ClearAllPools();
             if (File.Exists(databasePath)) File.Delete(databasePath);
             if (File.Exists(backupPath)) File.Delete(backupPath);
+        }
+    }
+
+    [TestMethod]
+    public async Task SqliteDatabaseInitializer_AppliesAllKnowledgeBaseMigrations()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"drugcompare-migrations-{Guid.NewGuid():N}.db");
+        try
+        {
+            await using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "CREATE TABLE polish_drug_registry_items (id INTEGER PRIMARY KEY);";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var initializer = new SqliteDatabaseInitializer(CreateConnectionFactory(databasePath));
+            await initializer.InitializeAsync();
+
+            await using var verified = new SqliteConnection($"Data Source={databasePath}");
+            await verified.OpenAsync();
+            await using var verifyCommand = verified.CreateCommand();
+            verifyCommand.CommandText = "SELECT COUNT(*) FROM schema_migrations;";
+            Assert.AreEqual(4L, Convert.ToInt64(await verifyCommand.ExecuteScalarAsync()));
+            verifyCommand.CommandText = "SELECT COUNT(*) FROM pragma_table_info('knowledge_chunks') WHERE name IN ('clinical_category', 'reviewed_by', 'parent_section_id', 'chunk_index');";
+            Assert.AreEqual(4L, Convert.ToInt64(await verifyCommand.ExecuteScalarAsync()));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(databasePath)) File.Delete(databasePath);
         }
     }
 
@@ -323,6 +375,35 @@ public sealed class PolishDrugRegistryRepositoryTests
                 Assert.AreEqual(index++, reader.GetInt32(0));
                 Assert.AreEqual(1L, reader.GetInt64(1));
             }
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(databasePath)) File.Delete(databasePath);
+        }
+    }
+
+    [TestMethod]
+    public async Task IngestAsync_SplitsSingleLongParagraphWithinChunkLimit()
+    {
+        var databasePath = Path.Combine(Path.GetTempPath(), $"drugcompare-long-paragraph-{Guid.NewGuid():N}.db");
+        try
+        {
+            await CreateKnowledgeBaseDatabaseAsync(databasePath);
+            var repository = new SqliteAtomicKnowledgeBaseIngestionRepository(CreateConnectionFactory(databasePath));
+            var now = DateTime.UtcNow;
+            var text = string.Join(' ', Enumerable.Repeat("bardzoDlugiWyraz", 300));
+
+            var result = await repository.IngestAsync(
+                new ChplDocumentRecord { ProductName = "Test", SourceFile = "long.pdf", DocumentType = "ChPL", Language = "pl", ReviewStatus = "needs_review", ImportedAt = now },
+                [new ChplSectionRecord { SectionNumber = "4.4", Text = text, TextHash = "long", ReviewStatus = "needs_review", CreatedAt = now }]);
+
+            Assert.IsTrue(result.ChunksSaved > 1);
+            await using var connection = new SqliteConnection($"Data Source={databasePath}");
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT MAX(LENGTH(chunk_text)) FROM knowledge_chunks;";
+            Assert.IsTrue(Convert.ToInt64(await command.ExecuteScalarAsync()) <= 1200);
         }
         finally
         {

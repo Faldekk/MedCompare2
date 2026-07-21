@@ -32,6 +32,12 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
             return [];
         }
 
+        var ftsQuery = BuildFtsQuery(query);
+        if (ftsQuery is null)
+        {
+            return [];
+        }
+
         var intent = QueryIntentClassifier.Classify(query);
         var sql = BuildSql(options, allowedStatuses, QueryIntentClassifier.PreferredSections(intent));
 
@@ -41,7 +47,7 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
 
-        command.Parameters.AddWithValue("@query", BuildFtsQuery(query));
+        command.Parameters.AddWithValue("@query", ftsQuery);
         command.Parameters.AddWithValue("@limit", Math.Clamp(options.Limit, 1, 50));
 
         for (var i = 0; i < allowedStatuses.Count; i++)
@@ -149,7 +155,7 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
         return statuses;
     }
 
-    private static string BuildFtsQuery(string query)
+    private static string? BuildFtsQuery(string query)
     {
         var terms = query
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -157,9 +163,7 @@ public sealed class SqliteFtsRagRetriever : IRagRetriever
             .Select(term => $"\"{term.Replace("\"", "\"\"")}\"")
             .ToArray();
 
-        return terms.Length == 0
-            ? "\"\""
-            : string.Join(" ", terms);
+        return terms.Length == 0 ? null : string.Join(" ", terms);
     }
 
     private static KnowledgeChunkResult Map(SqliteDataReader reader)

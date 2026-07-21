@@ -183,16 +183,42 @@ public sealed class SqliteAtomicKnowledgeBaseIngestionRepository : IAtomicKnowle
 
         foreach (var paragraph in paragraphs.Length == 0 ? [text.Trim()] : paragraphs)
         {
-            if (current.Length > 0 && current.Length + paragraph.Length + 2 > targetLength)
+            var remaining = paragraph.Trim();
+            while (!string.IsNullOrWhiteSpace(remaining))
             {
-                chunks.Add(current.ToString());
-                var overlap = current.Length <= overlapLength ? current.ToString() : current.ToString()[^overlapLength..];
-                current.Clear();
-                current.Append(overlap.Trim());
-            }
+                var separatorLength = current.Length > 0 ? 2 : 0;
+                var availableLength = targetLength - current.Length - separatorLength;
 
-            if (current.Length > 0) current.AppendLine().AppendLine();
-            current.Append(paragraph);
+                if (availableLength <= 0)
+                {
+                    chunks.Add(current.ToString());
+                    var overlap = current.Length <= overlapLength ? current.ToString() : current.ToString()[^overlapLength..];
+                    current.Clear();
+                    current.Append(overlap.Trim());
+                    continue;
+                }
+
+                if (remaining.Length <= availableLength)
+                {
+                    if (separatorLength > 0) current.AppendLine().AppendLine();
+                    current.Append(remaining);
+                    break;
+                }
+
+                var splitAt = remaining.LastIndexOf(' ', availableLength);
+                if (splitAt < availableLength / 2)
+                {
+                    splitAt = availableLength;
+                }
+
+                if (separatorLength > 0) current.AppendLine().AppendLine();
+                current.Append(remaining[..splitAt].Trim());
+                chunks.Add(current.ToString());
+                var nextOverlap = current.Length <= overlapLength ? current.ToString() : current.ToString()[^overlapLength..];
+                current.Clear();
+                current.Append(nextOverlap.Trim());
+                remaining = remaining[splitAt..].TrimStart();
+            }
         }
 
         if (current.Length > 0) chunks.Add(current.ToString());
