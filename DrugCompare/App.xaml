@@ -3,5 +3,66 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
+        <Color x:Key="Ink">#1F2937</Color>
+        <Color x:Key="Muted">#667085</Color>
+        <Color x:Key="Canvas">#FFFFFF</Color>
+        <Color x:Key="Surface">#FFFFFF</Color>
+        <Color x:Key="SurfaceRaised">#E5E7EB</Color>
+        <Color x:Key="Line">#D1D5DB</Color>
+        <Color x:Key="Accent">#D1D5DB</Color>
+        <Color x:Key="AccentStrong">#9CA3AF</Color>
+
+        <SolidColorBrush x:Key="InkBrush" Color="{StaticResource Ink}"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource Muted}"/>
+        <SolidColorBrush x:Key="CanvasBrush" Color="{StaticResource Canvas}"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}"/>
+        <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="{StaticResource SurfaceRaised}"/>
+        <SolidColorBrush x:Key="LineBrush" Color="{StaticResource Line}"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}"/>
+
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource SurfaceRaisedBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="#111827"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value=".45"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,7"/>
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+        </Style>
+        <Style TargetType="Expander">
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="Padding" Value="6,8"/>
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="RowBackground" Value="#FFFFFF"/>
+            <Setter Property="AlternatingRowBackground" Value="#F8FAFC"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+        </Style>
     </Application.Resources>
 </Application>

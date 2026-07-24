@@ -10,22 +10,22 @@
         Height="900"
         Width="1400"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F7FA">
+        Background="{StaticResource CanvasBrush}">
 
     <Window.Resources>
 
         <Style x:Key="CardStyle"
                TargetType="Border">
             <Setter Property="Background"
-                    Value="White"/>
+                    Value="{StaticResource SurfaceBrush}"/>
             <Setter Property="BorderBrush"
-                    Value="#DDE3EA"/>
+                    Value="Transparent"/>
             <Setter Property="BorderThickness"
-                    Value="1"/>
+                    Value="0"/>
             <Setter Property="CornerRadius"
-                    Value="10"/>
+                    Value="0"/>
             <Setter Property="Padding"
-                    Value="18"/>
+                    Value="22"/>
             <Setter Property="Margin"
                     Value="0,0,0,14"/>
         </Style>
@@ -33,7 +33,7 @@
         <Style x:Key="MutedTextStyle"
                TargetType="TextBlock">
             <Setter Property="Foreground"
-                    Value="#607D8B"/>
+                    Value="{StaticResource MutedBrush}"/>
             <Setter Property="FontSize"
                     Value="13"/>
         </Style>
@@ -49,7 +49,7 @@
             <Setter Property="FontSize"
                     Value="14"/>
             <Setter Property="Foreground"
-                    Value="#263238"/>
+                    Value="{StaticResource InkBrush}"/>
             <Setter Property="Background"
                     Value="Transparent"/>
             <Setter Property="BorderBrush"
@@ -89,8 +89,8 @@
 
         <!-- LEFT NAVIGATION -->
         <Border Grid.Column="0"
-                Background="White"
-                BorderBrush="#DDE3EA"
+                Background="#FFFFFF"
+                BorderBrush="#D1D5DB"
                 BorderThickness="0,0,1,0">
 
             <Grid>
@@ -117,12 +117,12 @@
                         <TextBlock Text="ClinicDaddy"
                                    FontSize="24"
                                    FontWeight="Bold"
-                                   Foreground="#102027"
+                                   Foreground="{StaticResource InkBrush}"
                                    Margin="0,0,0,4"/>
 
                         <TextBlock Text="Offline Clinical Decision Support"
                                    FontSize="12"
-                                   Foreground="#607D8B"
+                                   Foreground="{StaticResource MutedBrush}"
                                    Margin="0,0,0,20"/>
 
                         <Expander Header="Clinical Tools"

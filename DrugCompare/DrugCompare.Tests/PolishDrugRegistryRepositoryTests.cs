@@ -24,6 +24,36 @@ public sealed class PolishDrugRegistryRepositoryTests
     }
 
     [TestMethod]
+    public void RagAnswerValidator_RejectsCitationOutsideReviewedRetrievedSources()
+    {
+        var validator = new RagAnswerValidator();
+        var sources = new[]
+        {
+            new KnowledgeChunkResult { Id = 10, ReviewStatus = "verified", ChunkText = "Źródło" },
+            new KnowledgeChunkResult { Id = 20, ReviewStatus = "needs_review", ChunkText = "Nieweryfikowane" }
+        };
+        var answer = new RagAnswer
+        {
+            Summary = "Podsumowanie",
+            Findings = [new RagFinding { Claim = "Twierdzenie", SourceIds = [20] }]
+        };
+
+        var result = validator.Validate(answer, sources);
+
+        Assert.IsFalse(result.IsValid);
+    }
+
+    [TestMethod]
+    public void RagAnswerValidator_AcceptsInsufficientEvidenceWithoutFindings()
+    {
+        var result = new RagAnswerValidator().Validate(
+            new RagAnswer { Summary = "Brak źródeł.", InsufficientEvidence = true },
+            []);
+
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
     public void ChplSectionParser_ExportsRealInteractionHeaderAndIgnoresReferenceInText()
     {
         var parser = new ChplSectionParser();

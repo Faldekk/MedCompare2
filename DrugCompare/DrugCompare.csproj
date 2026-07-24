@@ -35,7 +35,7 @@
 		</None>
 		<None Update="data\medcompare.db">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<CopyToPublishDirectory>Always</CopyToPublishDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</None>
   <None Update="database\schema_sqlite.sql">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

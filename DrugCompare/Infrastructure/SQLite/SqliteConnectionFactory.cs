@@ -7,6 +7,7 @@ namespace DrugCompare.Infrastructure.SQLite;
 public class SqliteConnectionFactory
 {
     private readonly string _connectionString;
+    private readonly string _databasePath;
 
     public SqliteConnectionFactory(IConfiguration configuration)
     {
@@ -15,9 +16,35 @@ public class SqliteConnectionFactory
 
         var builder = new SqliteConnectionStringBuilder(rawConnectionString);
 
-        if (!Path.IsPathRooted(builder.DataSource))
+        var configuredDataSource = builder.DataSource;
+        var bundledDatabasePath = Path.IsPathRooted(configuredDataSource)
+            ? configuredDataSource
+            : Path.Combine(AppContext.BaseDirectory, configuredDataSource);
+
+        if (IsBundledDefaultDatabase(configuredDataSource))
         {
-            builder.DataSource = Path.Combine(AppContext.BaseDirectory, builder.DataSource);
+            var localDatabaseDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "ClinicDaddy",
+                "data");
+            var localDatabasePath = Path.Combine(localDatabaseDirectory, "medcompare.db");
+
+            if (!File.Exists(localDatabasePath))
+            {
+                if (!File.Exists(bundledDatabasePath))
+                {
+                    throw new FileNotFoundException("Nie znaleziono bazowego pliku SQLite.", bundledDatabasePath);
+                }
+
+                Directory.CreateDirectory(localDatabaseDirectory);
+                File.Copy(bundledDatabasePath, localDatabasePath);
+            }
+
+            builder.DataSource = localDatabasePath;
+        }
+        else
+        {
+            builder.DataSource = bundledDatabasePath;
         }
 
         if (string.IsNullOrWhiteSpace(builder.DataSource) || !File.Exists(builder.DataSource))
@@ -38,6 +65,7 @@ public class SqliteConnectionFactory
         builder.DefaultTimeout = 5;
 
         _connectionString = builder.ToString();
+        _databasePath = builder.DataSource;
     }
 
     public SqliteConnection CreateConnection()
@@ -45,5 +73,11 @@ public class SqliteConnectionFactory
         return new SqliteConnection(_connectionString);
     }
 
-    public string DatabasePath => new SqliteConnectionStringBuilder(_connectionString).DataSource;
+    public string DatabasePath => _databasePath;
+
+    private static bool IsBundledDefaultDatabase(string configuredDataSource)
+    {
+        var normalized = configuredDataSource.Replace('/', Path.DirectorySeparatorChar).Trim();
+        return normalized.Equals("data\\medcompare.db", StringComparison.OrdinalIgnoreCase);
+    }
 }

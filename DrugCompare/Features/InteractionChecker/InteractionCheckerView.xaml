@@ -9,13 +9,13 @@
         <converters:SeverityToBrushConverter x:Key="SeverityToBrushConverter"/>
 
         <!-- Kolory bazowe -->
-        <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F4F7FB"/>
+        <SolidColorBrush x:Key="PageBackgroundBrush" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="BorderBrushSoft" Color="#D7DEE8"/>
-        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#111827"/>
+        <SolidColorBrush x:Key="BorderBrushSoft" Color="#D1D5DB"/>
+        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#1F2937"/>
         <SolidColorBrush x:Key="SecondaryTextBrush" Color="#6B7280"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#2563EB"/>
-        <SolidColorBrush x:Key="SoftAccentBrush" Color="#EEF2FF"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#374151"/>
+        <SolidColorBrush x:Key="SoftAccentBrush" Color="#F3F4F6"/>
         <SolidColorBrush x:Key="DangerBrush" Color="#DC2626"/>
         <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFF7E6"/>
         <SolidColorBrush x:Key="WarningBorderBrush" Color="#F2C879"/>
@@ -41,8 +41,8 @@
         <Style x:Key="CardBorderStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="0"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>

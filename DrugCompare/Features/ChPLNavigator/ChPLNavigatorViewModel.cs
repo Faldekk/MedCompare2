@@ -21,14 +21,17 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
     private readonly ChplCsvExporter _csvExporter = new();
 
     private readonly IKnowledgeBaseIngestionService _knowledgeBaseIngestionService;
+    private readonly ChplPdfDownloader _chplPdfDownloader;
 
     private ChplDocument? _currentDocument;
     private string? _currentFileHash;
 
     public ChPLNavigatorViewModel(
-        IKnowledgeBaseIngestionService knowledgeBaseIngestionService)
+        IKnowledgeBaseIngestionService knowledgeBaseIngestionService,
+        ChplPdfDownloader chplPdfDownloader)
     {
         _knowledgeBaseIngestionService = knowledgeBaseIngestionService;
+        _chplPdfDownloader = chplPdfDownloader;
     }
 
     [ObservableProperty]
@@ -63,7 +66,56 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
             ChplUrl = product.ChplUrl
         };
 
-        StatusMessage = $"Wybrano produkt RPL: {product.ProductName}. Wybierz lokalny plik ChPL PDF.";
+        StatusMessage = string.IsNullOrWhiteSpace(product.ChplUrl)
+            ? $"Wybrano produkt RPL: {product.ProductName}. Wybierz lokalny plik ChPL PDF."
+            : $"Wybrano produkt RPL: {product.ProductName}. Możesz pobrać ChPL z linku lub wybrać lokalny PDF.";
+    }
+
+    [RelayCommand]
+    private async Task DownloadAndImportChplAsync()
+    {
+        ChplImportDiagnostics.Write("Automatic ChPL import requested.");
+        var context = SelectedProductContext;
+        if (context is null)
+        {
+            StatusMessage = "Najpierw wybierz produkt w Polish Registry i przejdź do ChPL Navigator.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(context.ChplUrl))
+        {
+            StatusMessage = "Wybrany produkt nie ma linku ChPL. Wybierz lokalny plik PDF.";
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            StatusMessage = "Pobieranie ChPL PDF z linku produktu...";
+            var downloaded = await _chplPdfDownloader.DownloadAsync(context.ChplUrl, context.RplProductId);
+            SelectedPdfPath = downloaded.LocalFilePath;
+            ChplImportDiagnostics.Write($"PDF assigned to navigator: {SelectedPdfPath}");
+
+            await ExtractAndParseAsync();
+            ChplImportDiagnostics.Write($"PDF parsing completed. Sections: {_currentDocument?.Sections.Count.ToString() ?? "none"}");
+            if (_currentDocument is null || _currentDocument.Sections.Count == 0)
+            {
+                return;
+            }
+
+            await SaveToKnowledgeBaseAsync();
+            ChplImportDiagnostics.Write("Knowledge Base import command completed.");
+        }
+        catch (Exception ex)
+        {
+            ChplImportDiagnostics.Write("Automatic ChPL import failed.", ex);
+            StatusMessage = $"Nie udało się pobrać ChPL: {ex.Message}";
+            MessageBox.Show(StatusMessage, "Pobieranie ChPL", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]
@@ -115,6 +167,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
         {
             IsBusy = true;
             StatusMessage = "Odczytywanie PDF i parsowanie sekcji ChPL...";
+            ChplImportDiagnostics.Write($"PDF extraction started: {SelectedPdfPath}");
 
             var filePath = SelectedPdfPath;
 
@@ -124,6 +177,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
                 () => _pdfTextExtractor.ExtractText(filePath));
 
             RawText = extractedText;
+            ChplImportDiagnostics.Write($"PDF text extracted. Characters: {RawText.Length}");
 
             var parsedSections = await Task.Run(() =>
             {
@@ -151,6 +205,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
                 ParsedAt = DateTime.UtcNow,
                 Sections = parsedSections
             };
+            ChplImportDiagnostics.Write($"Document model created. Sections: {_currentDocument.Sections.Count}");
 
             SelectedSection = Sections.FirstOrDefault();
 
@@ -194,6 +249,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
         {
             IsBusy = true;
             StatusMessage = "Zapisywanie ChPL do Knowledge Base...";
+            ChplImportDiagnostics.Write($"Knowledge Base save started. File hash: {_currentFileHash ?? "none"}; Sections: {_currentDocument.Sections.Count}");
 
             var result = await _knowledgeBaseIngestionService.IngestChplDocumentAsync(
                 _currentDocument,
@@ -202,6 +258,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
 
             if (result.WasAlreadyImported)
             {
+                ChplImportDiagnostics.Write($"Knowledge Base import skipped: document {result.ChplDocumentId} already exists.");
                 StatusMessage =
                     $"Ten dokument jest już w Knowledge Base. ID dokumentu: {result.ChplDocumentId}.";
                 return;
@@ -211,9 +268,11 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
                 $"Zapisano do Knowledge Base. Dokument ID: {result.ChplDocumentId}. " +
                 $"Sekcje: {result.SectionsSaved}. Chunks: {result.ChunksSaved}. " +
                 $"Status: {result.ReviewStatus}.";
+            ChplImportDiagnostics.Write($"Knowledge Base save completed. Document: {result.ChplDocumentId}; Sections: {result.SectionsSaved}; Chunks: {result.ChunksSaved}; Status: {result.ReviewStatus}");
         }
         catch (Exception ex)
         {
+            ChplImportDiagnostics.Write("Knowledge Base save failed.", ex);
             StatusMessage = $"Błąd zapisu do Knowledge Base: {ex.Message}";
 
             MessageBox.Show(
@@ -256,6 +315,7 @@ public sealed partial class ChPLNavigatorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+            ChplImportDiagnostics.Write("PDF extraction or parsing failed.", ex);
             StatusMessage = $"Nie udało się zapisać JSON: {ex.Message}";
             MessageBox.Show(StatusMessage, "Błąd eksportu", MessageBoxButton.OK, MessageBoxImage.Error);
         }

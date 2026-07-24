@@ -2,7 +2,25 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid Background="#F5F7FA">
+    <Grid Background="#F3F4F6">
+        <Grid.Resources>
+            <Style x:Key="SectionStyle" TargetType="Border">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="BorderBrush" Value="#D1D5DB"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="0"/>
+            </Style>
+            <Style x:Key="PrimaryButton" TargetType="Button">
+                <Setter Property="Background" Value="#374151"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="BorderBrush" Value="#374151"/>
+            </Style>
+            <Style x:Key="QuietButton" TargetType="Button">
+                <Setter Property="Background" Value="#E5E7EB"/>
+                <Setter Property="Foreground" Value="#1F2937"/>
+                <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -11,22 +29,19 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0"
-                    Margin="0,0,0,16">
+                    Margin="0,0,0,14">
             <TextBlock Text="Evidence Assistant"
-                       FontSize="26"
+                       FontSize="28"
                        FontWeight="Bold"
                        Foreground="#102027"/>
 
-            <TextBlock Text="Lokalne wyszukiwanie źródeł. Bez DeepSeek. Bez generowania odpowiedzi klinicznej."
+            <TextBlock Text="Lokalne wyszukiwanie źródeł. Opcjonalny Ollama redaguje odpowiedź wyłącznie ze zweryfikowanych źródeł."
                        Foreground="#607D8B"
                        Margin="0,4,0,0"/>
         </StackPanel>
 
         <Border Grid.Row="1"
-                Background="White"
-                BorderBrush="#DDE3EA"
-                BorderThickness="1"
-                CornerRadius="10"
+                Style="{StaticResource SectionStyle}"
                 Padding="18"
                 Margin="0,0,0,14">
 
@@ -36,6 +51,7 @@
                            Margin="0,0,0,6"/>
 
                 <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}"
+                         Background="#FAFAFA"
                          MinHeight="70"
                          TextWrapping="Wrap"
                          AcceptsReturn="True"
@@ -76,12 +92,14 @@
 
                 <StackPanel Orientation="Horizontal">
                     <Button Content="Szukaj źródeł"
+                            Style="{StaticResource QuietButton}"
                             Command="{Binding SearchCommand}"
                             Height="34"
                             Width="130"
                             Margin="0,0,8,0"/>
 
                     <Button Content="Wyczyść"
+                            Style="{StaticResource QuietButton}"
                             Command="{Binding ClearCommand}"
                             Height="34"
                             Width="90"/>
@@ -90,13 +108,24 @@
         </Border>
 
         <Border Grid.Row="2"
-                Background="White"
-                BorderBrush="#DDE3EA"
-                BorderThickness="1"
-                CornerRadius="10"
+                Style="{StaticResource SectionStyle}"
                 Padding="12">
 
-            <DataGrid ItemsSource="{Binding Results}"
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="Źródła"
+                               FontSize="15"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="#6B7280"
+                               HorizontalAlignment="Right"/>
+                </DockPanel>
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Results}"
                       SelectedItem="{Binding SelectedResult}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
@@ -139,9 +168,10 @@
                 </DataGrid.Columns>
 
             </DataGrid>
+            </Grid>
         </Border>
 
-        <StackPanel Grid.Row="3" Margin="0,10,0,0">
+        <StackPanel Grid.Row="3" Margin="0,12,0,0">
             <WrapPanel Margin="0,0,0,6">
                 <TextBox Text="{Binding ReviewerName, UpdateSourceTrigger=PropertyChanged}"
                          Width="180" Height="30" Margin="0,0,8,0"
@@ -151,14 +181,23 @@
                          Width="260" Height="30" Margin="0,0,8,0"
                          VerticalContentAlignment="Center"
                          ToolTip="Notatka weryfikacji"/>
-                <Button Content="Reviewed" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="reviewed" Height="30" Margin="0,0,6,0"/>
-                <Button Content="Verified" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="verified" Height="30" Margin="0,0,6,0"/>
-                <Button Content="Rejected" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="rejected" Height="30"/>
+                <Button Content="Reviewed" Style="{StaticResource QuietButton}" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="reviewed" Height="30" Margin="0,0,6,0"/>
+                <Button Content="Verified" Style="{StaticResource QuietButton}" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="verified" Height="30" Margin="0,0,6,0"/>
+                <Button Content="Rejected" Style="{StaticResource QuietButton}" Command="{Binding ChangeReviewStatusCommand}" CommandParameter="rejected" Height="30"/>
                 <Button Content="Otwórz źródło" Command="{Binding OpenSelectedSourceCommand}" Height="30" Margin="8,0,0,0"/>
+                <Button Content="Zredaguj odpowiedź RAG" Style="{StaticResource QuietButton}" Command="{Binding GenerateRagAnswerCommand}" Height="30" Margin="8,0,0,0"/>
             </WrapPanel>
             <TextBlock Text="{Binding StatusMessage}" Foreground="#607D8B"/>
             <TextBlock Text="Źródła ze statusem needs_review są wykluczone domyślnie. Ich obecność oznacza dane nieweryfikowane."
                        Foreground="#A15C00" FontSize="12" Margin="0,4,0,0"/>
+            <TextBox Text="{Binding GeneratedAnswer}"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     MinHeight="90"
+                     MaxHeight="220"
+                     VerticalScrollBarVisibility="Auto"
+                     Margin="0,8,0,0"/>
         </StackPanel>
     </Grid>
 </UserControl>

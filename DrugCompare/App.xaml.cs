@@ -5,7 +5,9 @@ using DrugCompare.Application.Services.Contracts.KnowledgeBase;
 using DrugCompare.Application.Services.Contracts.Rag;
 using DrugCompare.Application.Services.Implementations;
 using DrugCompare.Application.Services.Implementations.KnowledgeBase;
+using DrugCompare.Application.Services.Implementations.Rag;
 using DrugCompare.Features.ChPLNavigator;
+using DrugCompare.Features.ChPLNavigator.Services;
 using DrugCompare.Features.EvidenceAssistant;
 using DrugCompare.Features.IcdLooker;
 using DrugCompare.Features.InteractionChecker;
@@ -18,6 +20,7 @@ using DrugCompare.ViewModels.Interaction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
+using System.Net.Http;
 using System.Windows.Threading;
 
 namespace DrugCompare;
@@ -48,11 +51,14 @@ public partial class App : System.Windows.Application
             RegisterViews(services);
 
             _serviceProvider = services.BuildServiceProvider();
+            WriteLifecycle("Startup: service provider created.");
             await _serviceProvider.GetRequiredService<SqliteDatabaseInitializer>()
                 .InitializeAsync();
+            WriteLifecycle("Startup: SQLite migrations completed.");
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
+            WriteLifecycle("Startup: main window shown.");
         }
         catch (Exception ex)
         {
@@ -68,6 +74,7 @@ public partial class App : System.Windows.Application
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        WriteLifecycle($"Dispatcher exception: {e.Exception}");
         WriteStartupError(e.Exception);
         System.Windows.MessageBox.Show(
             $"Nieobsłużony błąd aplikacji. Szczegóły zapisano w startup-error.log.\n\n{e.Exception.Message}",
@@ -93,8 +100,23 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(System.Windows.ExitEventArgs e)
     {
+        WriteLifecycle($"Application exit. Exit code: {e.ApplicationExitCode}.");
         _serviceProvider?.Dispose();
         base.OnExit(e);
+    }
+
+    private static void WriteLifecycle(string message)
+    {
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(AppContext.BaseDirectory, "app-lifecycle.log"),
+                $"[{DateTimeOffset.Now:O}] {message}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Lifecycle logging cannot interfere with shutdown.
+        }
     }
 
     private static void RegisterSqliteRepositories(IServiceCollection services)
@@ -142,6 +164,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IIcdCodeService, IcdCodeService>();
         services.AddSingleton<IAuditLogService, AuditLogService>();
         services.AddSingleton<IRagRetriever, SqliteFtsRagRetriever>();
+        services.AddSingleton<IRagAnswerValidator, RagAnswerValidator>();
+        services.AddSingleton(new HttpClient());
+        services.AddSingleton<IRagAnswerService, OllamaRagAnswerService>();
+        services.AddSingleton<ChplPdfDownloader>();
         services.AddSingleton<IKnowledgeBaseIngestionService, KnowledgeBaseIngestionService>();
         services.AddSingleton<IKnowledgeBaseReviewService, KnowledgeBaseReviewService>();
         services.AddSingleton<IKnowledgeBaseStatsService, KnowledgeBaseStatsService>();

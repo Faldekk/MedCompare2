@@ -12,6 +12,7 @@ public sealed class SqliteKnowledgeBaseReviewRepository : IKnowledgeBaseReviewRe
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
+        await EnsureAuditLogDetailsColumnAsync(connection, cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
         try
         {
@@ -35,6 +36,36 @@ public sealed class SqliteKnowledgeBaseReviewRepository : IKnowledgeBaseReviewRe
         {
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
+        }
+    }
+
+    private static async Task EnsureAuditLogDetailsColumnAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using var create = connection.CreateCommand();
+        create.CommandText = """
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                details TEXT NULL,
+                created_at TEXT NOT NULL
+            );
+            """;
+        await create.ExecuteNonQueryAsync(cancellationToken);
+
+        await using var columns = connection.CreateCommand();
+        columns.CommandText = "PRAGMA table_info(audit_logs);";
+        await using var reader = await columns.ExecuteReaderAsync(cancellationToken);
+        var hasDetails = false;
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            hasDetails |= string.Equals(reader.GetString(1), "details", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (!hasDetails)
+        {
+            await using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE audit_logs ADD COLUMN details TEXT NULL;";
+            await alter.ExecuteNonQueryAsync(cancellationToken);
         }
     }
 
